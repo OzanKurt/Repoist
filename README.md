@@ -50,7 +50,7 @@ Will output:
 ### Repositories With Schema
 
 ```
-php artisan make:repository Task
+php artisan make:repository Task -m
 ```
 
 Will output:
