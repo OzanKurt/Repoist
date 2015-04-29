@@ -43,6 +43,7 @@ php artisan make:repository Task
 ```
 
 Will output:
+
 	- `app/Repositories/Task/TaskRepository.php` (contract)
 	- `app/Repositories/Task/EloquentTaskRepository.php`
 
@@ -53,6 +54,7 @@ php artisan make:repository Task
 ```
 
 Will output:
+
 	- `app/Repositories/Task/TaskRepository.php` (contract)
 	- `app/Repositories/Task/EloquentTaskRepository.php`
 	- `app/Task.php`
