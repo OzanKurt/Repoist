@@ -25,7 +25,7 @@ public function register()
 
 ### Step 3: Publish and edit the configurations
 
-Run `php artisan vendor:publish` from the console to configur the Repoist according to your needs. 
+Run `php artisan vendor:publish` from the console to configure the Repoist according to your needs. 
 
 ### Step 4: Run Artisan!
 
@@ -76,7 +76,7 @@ return [
 	'path' => 'Repositories',
 
 	/**
-	 * Default path of models in larave is the `app` folder.
+	 * Default path of models in laravel is the `app` folder.
 	 * In this case:
 	 * 		app/
 	 */
