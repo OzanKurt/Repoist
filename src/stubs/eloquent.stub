@@ -1,0 +1,12 @@
+<?php
+
+use {{namespace}};
+
+class {{class}} extends {{contract}}
+{
+    
+    public function getAll()
+    {
+        {{model}}
+    }
+}

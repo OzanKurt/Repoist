@@ -1,0 +1,5 @@
+suites:
+    main:
+        namespace: Kurt\Repoist
+        psr4_prefix: Kurt\Repoist
+        src_path: src

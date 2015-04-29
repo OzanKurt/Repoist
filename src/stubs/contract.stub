@@ -1,0 +1,10 @@
+<?php
+
+use {{namespace}};
+
+interface {{contract}}
+{
+    
+    public function getAll();
+
+}
