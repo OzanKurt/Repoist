@@ -3,7 +3,7 @@
 namespace {{namespace}};
 use {{model_use}};
 
-class {{class}} extends {{contract}}
+class {{class}} implements {{contract}}
 {
     
     public function getAll()

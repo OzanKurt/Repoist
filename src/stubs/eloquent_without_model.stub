@@ -2,7 +2,7 @@
 
 namespace {{namespace}};
 
-class {{class}} extends {{contract}}
+class {{class}} implements {{contract}}
 {
     
     public function getAll()
