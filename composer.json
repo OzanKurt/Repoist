@@ -1,0 +1,24 @@
+{
+  "name": "ozankurt/repoist",
+  "description": "Laravel 5 repository generator.",
+  "keywords": ["laravel", "repoist"],
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Ozan Kurt",
+      "email": "hello@ozankurt.com"
+    }
+  ],
+  "require": {
+    "php": ">=5.4.0",
+    "illuminate/support": "~5.0"
+  },
+  "require-dev": {
+    "phpspec/phpspec": "~2.1"
+  },
+  "autoload": {
+    "psr-4": {
+      "Kurt\\Repoist\\": "src/"
+    }
+  }
+}
