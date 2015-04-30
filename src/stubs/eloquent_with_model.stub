@@ -11,4 +11,3 @@ class {{class}} implements {{contract}}
         return {{model}}::all();
     }
 }
-
