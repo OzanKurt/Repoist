@@ -17,7 +17,7 @@ You'll only want to use these generators for local development, so you don't wan
 ```php
 public function register()
 {
-	if ($this->app->environment() == 'local') {
+	if ($this->app->isLocal()) {
 		$this->app->register('Kurt\Repoist\RepoistServiceProvider');
 	}
 }
