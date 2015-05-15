@@ -1,6 +1,4 @@
-<?php
-
-use {{namespace}};
+<?php namespace {{namespace}};
 
 interface {{contract}}
 {
