@@ -139,8 +139,7 @@ class RepositoryMakeCommand extends Command
             if ($this->argument('name') && !$this->files->exists($modelPath)) {
                 $model_path = (config('repoist.model_path') != '') ? config('repoist.model_path').'/' : '';
                 $this->call('make:model', [
-                    'name' => $model_path.$this->argument('name'),
-                    '--no-migration' => true
+                    'name' => $model_path.$this->argument('name')
                 ]);
             }
         }
