@@ -69,8 +69,9 @@ class RepositoryMakeCommand extends Command
      */
     public function fire()
     {
-        $this->meta['namespace'] = $this->generateNamespace();
         $this->meta['names'] = $this->generateNames();
+        $this->meta['namespaces'] = $this->generateNamespaces();
+        $this->meta['filenames'] = $this->generateFileNames();
         $this->meta['paths'] = $this->generatePaths();
 
         $this->makeRepository();
@@ -79,14 +80,13 @@ class RepositoryMakeCommand extends Command
     /**
      * @return mixed
      */
-    private function generateNamespace()
+    private function generateNamespaces()
     {
-        $repoPath = config('repoist.path');
-        if(!$repoPath){
-            $repoPath = 'Repositories';
-        }
-        $namespace = str_replace('/', '\\', $this->getAppNamespace().'/'. $repoPath.'/'.$this->argument('name'));
-        return str_replace('\\\\', '\\', $namespace);
+        return [
+            'contract' => str_replace('\\\\', '\\', str_replace('/', '\\', config('repoist.paths.contract') . $this->meta['names']['subNamespace'])),
+            'eloquent' => str_replace('\\\\', '\\', str_replace('/', '\\', config('repoist.paths.eloquent') . $this->meta['names']['subNamespace'])),
+            'model' => str_replace('\\\\', '\\', str_replace('/', '\\', config('repoist.paths.model') . $this->meta['names']['subNamespace'])),
+        ];
     }
 
     /**
@@ -95,8 +95,9 @@ class RepositoryMakeCommand extends Command
     private function generatePaths()
     {
         return [
-            'contract' => './app/'.str_replace('{name}', $this->argument('name'), config('repoist.path')).'/'.$this->argument('name').'/'.$this->meta['names']['contract'].'.php',
-            'eloquent' => './app/'.str_replace('{name}', $this->argument('name'), config('repoist.path')).'/'.$this->argument('name').'/'.$this->meta['names']['eloquent'].'.php',
+            'contract' => './'.str_replace('{name}', $this->argument('name'), config('repoist.paths.contract')).'/'.$this->meta['names']['subNamespace'].'/'.$this->meta['filenames']['contract'].'.php',
+            'eloquent' => './'.str_replace('{name}', $this->argument('name'), config('repoist.paths.eloquent')).'/'.$this->meta['names']['subNamespace'].'/'.$this->meta['filenames']['eloquent'].'.php',
+            'model' => './'.str_replace('{name}', $this->argument('name'), config('repoist.paths.model')).'/'.$this->meta['names']['subNamespace'].'/'.$this->meta['filenames']['model'].'.php',
         ];
     }
 
@@ -106,8 +107,20 @@ class RepositoryMakeCommand extends Command
     private function generateNames()
     {
         return [
+            'name' => preg_replace("/.*?([^\\\\\\/ ]*)$/", "$1", $this->argument('name')),
+            'subNamespace' => preg_replace("/(.*?)([^\\\\\\/ ]*)$/", "$1", $this->argument('name')),
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    private function generateFileNames()
+    {
+        return [
             'contract' => str_replace('{name}', $this->argument('name'), config('repoist.fileNames.contract')),
             'eloquent' => str_replace('{name}', $this->argument('name'), config('repoist.fileNames.eloquent')),
+            'model' => str_replace('{name}', $this->argument('name'), config('repoist.fileNames.model')),
         ];
     }
 
@@ -118,11 +131,10 @@ class RepositoryMakeCommand extends Command
     {
         foreach ($this->meta['paths'] as $key => $path) {
             if ($this->files->exists($path)) {
-                return $this->error($this->meta['names'][$key] . ' already exists!');
+                return $this->error($this->meta['filenames'][$key] . ' already exists!');
             }
+            $this->makeDirectory($path);
         }
-
-        $this->makeDirectory($path);
 
         $this->makeContract();
 
@@ -139,14 +151,9 @@ class RepositoryMakeCommand extends Command
     protected function makeModel()
     {
         if ($this->option('model')) {
-            $modelPath = $this->getModelPath($this->argument('name'));
+            $this->files->put($this->meta['paths']['model'], $this->compileModelStub());
 
-            if ($this->argument('name') && !$this->files->exists($modelPath)) {
-                $model_path = (config('repoist.model_path') != '') ? config('repoist.model_path').'/' : '';
-                $this->call('make:model', [
-                    'name' => $model_path.$this->argument('name')
-                ]);
-            }
+            $this->info($this->meta['filenames']['model'].' created successfully.');
         }
     }
 
@@ -157,7 +164,7 @@ class RepositoryMakeCommand extends Command
     {
         $this->files->put($this->meta['paths']['contract'], $this->compileContractStub());
 
-        $this->info($this->meta['names']['contract'].' created successfully.');
+        $this->info($this->meta['filenames']['contract'].' created successfully.');
     }
 
     /**
@@ -167,7 +174,7 @@ class RepositoryMakeCommand extends Command
     {
         $this->files->put($this->meta['paths']['eloquent'], $this->compileEloquentStub());
 
-        $this->info($this->meta['names']['eloquent'].' created successfully.');
+        $this->info($this->meta['filenames']['eloquent'].' created successfully.');
     }
 
     /**
@@ -184,19 +191,6 @@ class RepositoryMakeCommand extends Command
     }
 
     /**
-     * Get the destination class path.
-     *
-     * @param  string $name
-     * @return string
-     */
-    protected function getModelPath()
-    {
-        $name = str_replace($this->getAppNamespace(), config('model_path'), $this->argument('name'));
-
-        return $this->laravel['path'] . '/' . str_replace('\\', '/', $name) . '.php';
-    }
-
-    /**
      * Compile the migration stub.
      *
      * @return string
@@ -205,8 +199,23 @@ class RepositoryMakeCommand extends Command
     {
         $stub = $this->files->get(__DIR__ . '/../stubs/contract.stub');
 
-        $this->replaceNamespace($stub)
+        $this->replaceNamespace($stub, 'contract')
              ->replaceContractName($stub);
+
+        return $stub;
+    }
+
+    /**
+     * Compile the model stub.
+     *
+     * @return string
+     */
+    protected function compileModelStub()
+    {
+        $stub = $this->files->get(__DIR__ . '/../stubs/model.stub');
+
+        $this->replaceNamespace($stub, 'model')
+             ->replaceModel($stub);
 
         return $stub;
     }
@@ -234,7 +243,7 @@ class RepositoryMakeCommand extends Command
     {
         $stub = $this->files->get(__DIR__ . '/../stubs/eloquent_with_model.stub');
 
-        $this->replaceNamespace($stub)
+        $this->replaceNamespace($stub, 'eloquent')
              ->replaceRepositoryName($stub)
              ->replaceContractName($stub)
              ->replaceModel($stub);
@@ -251,7 +260,7 @@ class RepositoryMakeCommand extends Command
     {
         $stub = $this->files->get(__DIR__ . '/../stubs/eloquent_without_model.stub');
 
-        $this->replaceNamespace($stub)
+        $this->replaceNamespace($stub, 'eloquent')
              ->replaceRepositoryName($stub)
              ->replaceContractName($stub);
 
@@ -264,9 +273,9 @@ class RepositoryMakeCommand extends Command
      * @param  string $stub
      * @return $this
      */
-    protected function replaceNamespace(&$stub)
+    protected function replaceNamespace(&$stub, $type)
     {
-        $stub = str_replace('{{namespace}}', $this->meta['namespace'], $stub);
+        $stub = str_replace('{{namespace}}', $this->meta['namespaces'][$type], $stub);
 
         return $this;
     }
@@ -279,7 +288,7 @@ class RepositoryMakeCommand extends Command
      */
     protected function replaceContractName(&$stub)
     {
-        $stub = str_replace('{{contract}}', $this->meta['names']['contract'], $stub);
+        $stub = str_replace('{{contract}}', $this->meta['filenames']['contract'], $stub);
 
         return $this;
     }
@@ -292,7 +301,7 @@ class RepositoryMakeCommand extends Command
      */
     protected function replaceRepositoryName(&$stub)
     {
-        $stub = str_replace('{{class}}', $this->meta['names']['eloquent'], $stub);
+        $stub = str_replace('{{class}}', $this->meta['filenames']['eloquent'], $stub);
 
         return $this;
     }
@@ -305,11 +314,7 @@ class RepositoryMakeCommand extends Command
      */
     protected function replaceModel(&$stub)
     {
-        $model_path = (config('repoist.model_path') != '') ? config('repoist.model_path').'\\' : '';
-
-        $namespace = $this->getAppNamespace().$model_path.$this->argument('name');
-
-        $stub = str_replace('{{model_use}}', $namespace, $stub);
+        $stub = str_replace('{{model_use}}', $this->meta['namespaces']['model'], $stub);
 
         $stub = str_replace('{{model}}', $this->argument('name'), $stub);
 

@@ -3,32 +3,30 @@
 return [
 
 	/**
-	 * Default path of repositories in `app` folder.
+	 * Default path of repositories.
 	 * In this case:
 	 * 		app/Repositories
 	 */
-	'path' => 'Repositories',
-
-	/**
-	 * Default path of models in larave is the `app` folder.
-	 * In this case:
-	 * 		app/
-	 */
-	'model_path' => '',
-
+	'paths' => [
+            'contract' => 'app/Interfaces',
+            'eloquent' => 'app/Repositories',
+            'model' => 'app/Models',
+    ],
 	/**
 	 * Configure the naming convention you wish for your repositories.
 	 *
-	 * Example: php artisan make:repository Users 
+	 * Example: php artisan make:repository Users
 	 * 		- Contract: UsersRepository
 	 * 		- Eloquent: EloquentUsersRepository
 	 */
 	'fileNames' => [
 
-		'contract' => '{name}Repository',
+		'contract' => '{name}RepositoryInterface',
 
-		'eloquent' => 'Eloquent{name}Repository',
-		
+		'eloquent' => '{name}RepositoryEloquent',
+
+        'model' => '{name}Eloquent',
+
 	],
 
 ];
