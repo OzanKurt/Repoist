@@ -1,5 +1,4 @@
 <?php
-
 namespace Kurt\Repoist\Commands;
 
 use Illuminate\Console\AppNamespaceDetectorTrait;
@@ -78,15 +77,23 @@ class RepositoryMakeCommand extends Command
     }
 
     /**
-     * @return mixed
+     * @return array
      */
     private function generateNamespaces()
     {
         return [
-            'contract' => str_replace('\\\\', '\\', str_replace('/', '\\', config('repoist.paths.contract') . '/' . $this->meta['names']['subNamespace'])),
-            'eloquent' => str_replace('\\\\', '\\', str_replace('/', '\\', config('repoist.paths.eloquent') . '/' . $this->meta['names']['subNamespace'])),
-            'model' => str_replace('\\\\', '\\', str_replace('/', '\\', config('repoist.paths.model') . '/' . $this->meta['names']['subNamespace'])),
-        ];
+            'contract' => $this->cleanNamespaces(config('repoist.paths.contract') . '/' . $this->meta['names']['subNamespace']),
+            'eloquent' => $this->cleanNamespaces(config('repoist.paths.eloquent') . '/' . $this->meta['names']['subNamespace']),
+            'model' => $this->cleanNamespaces(config('repoist.paths.model') . '/' . $this->meta['names']['subNamespace']),
+            ];
+    }
+
+    /**
+     * @return string
+     */
+    private function cleanNamespaces($str)
+    {
+        return str_replace('\\\\', '\\', str_replace('/', '\\', $str));
     }
 
     /**
@@ -95,10 +102,10 @@ class RepositoryMakeCommand extends Command
     private function generatePaths()
     {
         return [
-            'contract' => './'.str_replace('{name}', $this->argument('name'), config('repoist.paths.contract')).'/'.$this->meta['names']['subPath'].$this->meta['filenames']['contract'].'.php',
-            'eloquent' => './'.str_replace('{name}', $this->argument('name'), config('repoist.paths.eloquent')).'/'.$this->meta['names']['subPath'].$this->meta['filenames']['eloquent'].'.php',
-            'model' => './'.str_replace('{name}', $this->argument('name'), config('repoist.paths.model')).'/'.$this->meta['names']['subPath'].$this->meta['filenames']['model'].'.php',
-        ];
+            'contract' => './' . config('repoist.paths.contract') . '/' . $this->meta['names']['subPath'] . $this->meta['filenames']['contract'] . '.php',
+            'eloquent' => './' . config('repoist.paths.eloquent') . '/' . $this->meta['names']['subPath'] . $this->meta['filenames']['eloquent'] . '.php',
+            'model' => './' . config('repoist.paths.model') . '/' . $this->meta['names']['subPath'] . $this->meta['filenames']['model'] . '.php',
+            ];
     }
 
     /**
@@ -110,7 +117,7 @@ class RepositoryMakeCommand extends Command
             'name' => preg_replace("/.*?([^\\\\\\/ ]*)$/", "$1", $this->argument('name')),
             'subNamespace' => preg_replace("/(.*?)(\\/?[^\\\\\\/ ]*)$/", "$1", $this->argument('name')),
             'subPath' => preg_replace("/(.*?)([^\\\\\\/ ]*)$/", "$1", $this->argument('name')),
-        ];
+            ];
     }
 
     /**
@@ -121,7 +128,7 @@ class RepositoryMakeCommand extends Command
         return [
             'contract' => str_replace('{name}', $this->meta['names']['name'], config('repoist.fileNames.contract')),
             'eloquent' => str_replace('{name}', $this->meta['names']['name'], config('repoist.fileNames.eloquent')),
-            'model' => str_replace('{name}', $this->meta['names']['name'], config('repoist.fileNames.model')),
+            'model' => str_replace('{name}', $this->meta['names']['name'], config('repoist.fileNames.model')) ,
         ];
     }
 
@@ -154,7 +161,7 @@ class RepositoryMakeCommand extends Command
         if ($this->option('model')) {
             $this->files->put($this->meta['paths']['model'], $this->compileModelStub());
 
-            $this->info($this->meta['filenames']['model'].' created successfully.');
+            $this->info($this->meta['filenames']['model'] . ' created successfully.');
         }
     }
 
@@ -165,7 +172,7 @@ class RepositoryMakeCommand extends Command
     {
         $this->files->put($this->meta['paths']['contract'], $this->compileContractStub());
 
-        $this->info($this->meta['filenames']['contract'].' created successfully.');
+        $this->info($this->meta['filenames']['contract'] . ' created successfully.');
     }
 
     /**
@@ -175,7 +182,7 @@ class RepositoryMakeCommand extends Command
     {
         $this->files->put($this->meta['paths']['eloquent'], $this->compileEloquentStub());
 
-        $this->info($this->meta['filenames']['eloquent'].' created successfully.');
+        $this->info($this->meta['filenames']['eloquent'] . ' created successfully.');
     }
 
     /**
@@ -200,8 +207,7 @@ class RepositoryMakeCommand extends Command
     {
         $stub = $this->files->get(__DIR__ . '/../stubs/contract.stub');
 
-        $this->replaceNamespace($stub, 'contract')
-             ->replaceContractName($stub);
+        $this->replaceNamespace($stub, 'contract')->replaceContractName($stub);
 
         return $stub;
     }
@@ -215,8 +221,7 @@ class RepositoryMakeCommand extends Command
     {
         $stub = $this->files->get(__DIR__ . '/../stubs/model.stub');
 
-        $this->replaceNamespace($stub, 'model')
-             ->replaceModel($stub);
+        $this->replaceNamespace($stub, 'model')->replaceModel($stub);
 
         return $stub;
     }
@@ -244,10 +249,7 @@ class RepositoryMakeCommand extends Command
     {
         $stub = $this->files->get(__DIR__ . '/../stubs/eloquent_with_model.stub');
 
-        $this->replaceNamespace($stub, 'eloquent')
-             ->replaceRepositoryName($stub)
-             ->replaceContractName($stub)
-             ->replaceModel($stub);
+        $this->replaceNamespace($stub, 'eloquent')->replaceRepositoryName($stub)->replaceContractName($stub)->replaceModel($stub);
 
         return $stub;
     }
@@ -261,9 +263,7 @@ class RepositoryMakeCommand extends Command
     {
         $stub = $this->files->get(__DIR__ . '/../stubs/eloquent_without_model.stub');
 
-        $this->replaceNamespace($stub, 'eloquent')
-             ->replaceRepositoryName($stub)
-             ->replaceContractName($stub);
+        $this->replaceNamespace($stub, 'eloquent')->replaceRepositoryName($stub)->replaceContractName($stub);
 
         return $stub;
     }
@@ -329,8 +329,7 @@ class RepositoryMakeCommand extends Command
      */
     protected function getArguments()
     {
-        return [
-            ['name', InputArgument::REQUIRED, 'The name of the repository.'],
+        return [['name', InputArgument::REQUIRED, 'The name of the repository.'],
         ];
     }
 
@@ -341,8 +340,7 @@ class RepositoryMakeCommand extends Command
      */
     protected function getOptions()
     {
-        return [
-            ['model', 'm', InputOption::VALUE_NONE, 'Want a model for this repository?'],
+        return [['model', 'm', InputOption::VALUE_NONE, 'Want a model for this repository?'],
         ];
     }
 }
