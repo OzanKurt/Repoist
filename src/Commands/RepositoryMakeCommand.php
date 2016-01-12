@@ -83,9 +83,9 @@ class RepositoryMakeCommand extends Command
     private function generateNamespaces()
     {
         return [
-            'contract' => str_replace('\\\\', '\\', str_replace('/', '\\', config('repoist.paths.contract') . $this->meta['names']['subNamespace'])),
-            'eloquent' => str_replace('\\\\', '\\', str_replace('/', '\\', config('repoist.paths.eloquent') . $this->meta['names']['subNamespace'])),
-            'model' => str_replace('\\\\', '\\', str_replace('/', '\\', config('repoist.paths.model') . $this->meta['names']['subNamespace'])),
+            'contract' => str_replace('\\\\', '\\', str_replace('/', '\\', config('repoist.paths.contract') . '/' . $this->meta['names']['subNamespace'])),
+            'eloquent' => str_replace('\\\\', '\\', str_replace('/', '\\', config('repoist.paths.eloquent') . '/' . $this->meta['names']['subNamespace'])),
+            'model' => str_replace('\\\\', '\\', str_replace('/', '\\', config('repoist.paths.model') . '/' . $this->meta['names']['subNamespace'])),
         ];
     }
 
@@ -95,9 +95,9 @@ class RepositoryMakeCommand extends Command
     private function generatePaths()
     {
         return [
-            'contract' => './'.str_replace('{name}', $this->argument('name'), config('repoist.paths.contract')).'/'.$this->meta['names']['subNamespace'].'/'.$this->meta['filenames']['contract'].'.php',
-            'eloquent' => './'.str_replace('{name}', $this->argument('name'), config('repoist.paths.eloquent')).'/'.$this->meta['names']['subNamespace'].'/'.$this->meta['filenames']['eloquent'].'.php',
-            'model' => './'.str_replace('{name}', $this->argument('name'), config('repoist.paths.model')).'/'.$this->meta['names']['subNamespace'].'/'.$this->meta['filenames']['model'].'.php',
+            'contract' => './'.str_replace('{name}', $this->argument('name'), config('repoist.paths.contract')).'/'.$this->meta['names']['subPath'].$this->meta['filenames']['contract'].'.php',
+            'eloquent' => './'.str_replace('{name}', $this->argument('name'), config('repoist.paths.eloquent')).'/'.$this->meta['names']['subPath'].$this->meta['filenames']['eloquent'].'.php',
+            'model' => './'.str_replace('{name}', $this->argument('name'), config('repoist.paths.model')).'/'.$this->meta['names']['subPath'].$this->meta['filenames']['model'].'.php',
         ];
     }
 
@@ -108,7 +108,8 @@ class RepositoryMakeCommand extends Command
     {
         return [
             'name' => preg_replace("/.*?([^\\\\\\/ ]*)$/", "$1", $this->argument('name')),
-            'subNamespace' => preg_replace("/(.*?)([^\\\\\\/ ]*)$/", "$1", $this->argument('name')),
+            'subNamespace' => preg_replace("/(.*?)(\\/?[^\\\\\\/ ]*)$/", "$1", $this->argument('name')),
+            'subPath' => preg_replace("/(.*?)([^\\\\\\/ ]*)$/", "$1", $this->argument('name')),
         ];
     }
 
@@ -118,9 +119,9 @@ class RepositoryMakeCommand extends Command
     private function generateFileNames()
     {
         return [
-            'contract' => str_replace('{name}', $this->argument('name'), config('repoist.fileNames.contract')),
-            'eloquent' => str_replace('{name}', $this->argument('name'), config('repoist.fileNames.eloquent')),
-            'model' => str_replace('{name}', $this->argument('name'), config('repoist.fileNames.model')),
+            'contract' => str_replace('{name}', $this->meta['names']['name'], config('repoist.fileNames.contract')),
+            'eloquent' => str_replace('{name}', $this->meta['names']['name'], config('repoist.fileNames.eloquent')),
+            'model' => str_replace('{name}', $this->meta['names']['name'], config('repoist.fileNames.model')),
         ];
     }
 
@@ -314,9 +315,9 @@ class RepositoryMakeCommand extends Command
      */
     protected function replaceModel(&$stub)
     {
-        $stub = str_replace('{{model_use}}', $this->meta['namespaces']['model'], $stub);
+        $stub = str_replace('{{model_use}}', $this->meta['namespaces']['model'] . '\\' . $this->meta['filenames']['model'], $stub);
 
-        $stub = str_replace('{{model}}', $this->argument('name'), $stub);
+        $stub = str_replace('{{model}}', $this->meta['filenames']['model'], $stub);
 
         return $this;
     }
