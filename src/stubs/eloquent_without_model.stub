@@ -1,8 +1,10 @@
-<?php namespace {{namespace}};
+<?php
+
+namespace {{namespace}};
 
 class {{class}} implements {{contract}}
 {
-    
+
     public function getAll()
     {
         //

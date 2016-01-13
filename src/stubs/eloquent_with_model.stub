@@ -1,10 +1,12 @@
-<?php namespace {{namespace}};
+<?php
+
+namespace {{namespace}};
 
 use {{model_use}};
 
 class {{class}} implements {{contract}}
 {
-    
+
     public function getAll()
     {
         return {{model}}::all();
