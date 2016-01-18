@@ -68,27 +68,32 @@ If somehow you cannot publish the `config/repoist.php` from artisan here you can
 
 return [
 
-	/**
-	 * Default path of repositories in `app` folder.
-	 * In this case:
-	 * 		app/Repositories
-	 */
-	'path' => 'Repositories',
+    /**
+     * Default paths.
+     * In this case:
+     *      app/Interfaces
+     *      app/Repositories
+     *      app/Models
+     */
+    'paths' => [
+            'contract' => 'app/Interfaces',
+            'eloquent' => 'app/Repositories',
+            'model' => 'app/Models',
+    ],
+    /**
+     * Configure the naming convention you wish for your repositories.
+     *
+     * Example: php artisan make:repository Users
+     *      - Contract: UsersRepository
+     *      - Eloquent: EloquentUsersRepository
+     */
+    'fileNames' => [
 
-	/**
-	 * Default path of models in laravel is the `app` folder.
-	 * In this case:
-	 * 		app/
-	 */
-	'model_path' => '',
+        'contract' => '{name}RepositoryInterface',
+        'eloquent' => '{name}RepositoryEloquent',
+        'model' => '{name}Eloquent',
 
-	/**
-	 * Configure the naming convention you wish for your repositories.
-	 */
-	'fileNames' => [
-		'contract' => '{name}Repository',
-		'eloquent' => 'Eloquent{name}Repository',
-	],
+    ],
 
 ];
 ```
