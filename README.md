@@ -44,8 +44,8 @@ php artisan make:repository Task
 
 Will output:
 
-- `app/Repositories/Task/TaskRepository.php` (contract)
-- `app/Repositories/Task/EloquentTaskRepository.php`
+- `app/Interfaces/Task/TaskRepositoryInterface.php` (contract)
+- `app/Repositories/Task/TaskRepositoryEloquent.php`
 
 ### Repositories With Schema
 
@@ -55,9 +55,9 @@ php artisan make:repository Task -m
 
 Will output:
 
-- `app/Repositories/Task/TaskRepository.php` (contract)
-- `app/Repositories/Task/EloquentTaskRepository.php`
-- `app/Task.php`
+- `app/Interfaces/Task/TaskRepositoryInterface.php` (contract)
+- `app/Repositories/Task/TaskRepositoryEloquent.php`
+- `app/Models/TaskEloquent.php`
 
 ## Configurations
 
@@ -86,6 +86,7 @@ return [
      * Example: php artisan make:repository Users
      *      - Contract: UsersRepository
      *      - Eloquent: EloquentUsersRepository
+     *      - Model   : UsersEloquent
      */
     'fileNames' => [
 
