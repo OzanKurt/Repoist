@@ -3,14 +3,16 @@
 return [
 
     /**
-     * Default path of repositories.
+     * Default paths.
      * In this case:
+     *      app/Interfaces
      *      app/Repositories
+     *      app/Models
      */
     'paths' => [
-            'contract' => 'app/Interfaces',
-            'eloquent' => 'app/Repositories',
-            'model' => 'app/Models',
+        'contract' => 'app/Interfaces',
+        'eloquent' => 'app/Repositories',
+        'model' => 'app/Models',
     ],
     /**
      * Configure the naming convention you wish for your repositories.
@@ -22,9 +24,7 @@ return [
     'fileNames' => [
 
         'contract' => '{name}RepositoryInterface',
-
         'eloquent' => '{name}RepositoryEloquent',
-
         'model' => '{name}Eloquent',
 
     ],

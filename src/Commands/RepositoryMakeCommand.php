@@ -50,7 +50,6 @@ class RepositoryMakeCommand extends Command
      * Create a new command instance.
      *
      * @param Filesystem $files
-     * @param NameParser $parser
      * @param Composer $composer
      */
     public function __construct(Filesystem $files, Composer $composer)
