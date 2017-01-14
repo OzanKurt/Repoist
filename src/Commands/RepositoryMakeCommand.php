@@ -4,7 +4,6 @@ namespace Kurt\Repoist\Commands;
 use Illuminate\Console\AppNamespaceDetectorTrait;
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
-use Illuminate\Support\Composer;
 
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputArgument;
@@ -42,7 +41,7 @@ class RepositoryMakeCommand extends Command
     protected $meta;
 
     /**
-     * @var Composer
+     * @var \Illuminate\Foundation\Composer | \Illuminate\Support\Composer
      */
     private $composer;
 
@@ -50,14 +49,18 @@ class RepositoryMakeCommand extends Command
      * Create a new command instance.
      *
      * @param Filesystem $files
-     * @param Composer $composer
      */
-    public function __construct(Filesystem $files, Composer $composer)
+    public function __construct(Filesystem $files)
     {
         parent::__construct();
 
         $this->files = $files;
-        $this->composer = $composer;
+
+        if (class_exists(\Illuminate\Support\Composer::class)) {
+            $this->composer = app(\Illuminate\Support\Composer::class);
+        } else {
+            $this->composer = app(\Illuminate\Foundation\Composer::class);
+        }
     }
 
     /**
@@ -84,7 +87,7 @@ class RepositoryMakeCommand extends Command
             'contract' => $this->cleanNamespaces(config('repoist.paths.contract') . '/' . $this->meta['names']['subNamespace']),
             'eloquent' => $this->cleanNamespaces(config('repoist.paths.eloquent') . '/' . $this->meta['names']['subNamespace']),
             'model' => $this->cleanNamespaces(config('repoist.paths.model') . '/' . $this->meta['names']['subNamespace']),
-            ];
+        ];
     }
 
     /**
@@ -104,7 +107,7 @@ class RepositoryMakeCommand extends Command
             'contract' => './' . config('repoist.paths.contract') . '/' . $this->meta['names']['subPath'] . $this->meta['filenames']['contract'] . '.php',
             'eloquent' => './' . config('repoist.paths.eloquent') . '/' . $this->meta['names']['subPath'] . $this->meta['filenames']['eloquent'] . '.php',
             'model' => './' . config('repoist.paths.model') . '/' . $this->meta['names']['subPath'] . $this->meta['filenames']['model'] . '.php',
-            ];
+        ];
     }
 
     /**
@@ -116,7 +119,7 @@ class RepositoryMakeCommand extends Command
             'name' => preg_replace("/.*?([^\\\\\\/ ]*)$/", "$1", $this->argument('name')),
             'subNamespace' => preg_replace("/(.*?)(\\/?[^\\\\\\/ ]*)$/", "$1", $this->argument('name')),
             'subPath' => preg_replace("/(.*?)([^\\\\\\/ ]*)$/", "$1", $this->argument('name')),
-            ];
+        ];
     }
 
     /**
