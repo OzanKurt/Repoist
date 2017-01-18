@@ -1,6 +1,6 @@
 # Repoist
 
-Laravel 5 repository generator.
+Laravel and Lumen 5 repository generator.
 
 ## Usage
 
@@ -17,7 +17,11 @@ You'll only want to use these generators for local development, so you don't wan
 ```php
 public function register()
 {
-	if ($this->app->isLocal()) {
+	if ($this->app->environment('local')) {
+        /**
+         * Uncomment the following line in Lumen
+         */
+		//$this->app->configure('repoist');
 		$this->app->register('Kurt\Repoist\RepoistServiceProvider');
 	}
 }
@@ -25,7 +29,9 @@ public function register()
 
 ### Step 3: Publish and edit the configurations
 
-Run `php artisan vendor:publish` from the console to configure the Repoist according to your needs. 
+**In Laravel:** Run `php artisan vendor:publish` from the console to configure the Repoist according to your needs.
+ 
+**In Lumen:** Manually copy the config file `vendor/ozankurt/repoist/src/config/repoist.php` to your `config` directory
 
 ### Step 4: Run Artisan!
 
@@ -47,7 +53,7 @@ Will output:
 - `app/Interfaces/Task/TaskRepositoryInterface.php` (contract)
 - `app/Repositories/Task/TaskRepositoryEloquent.php`
 
-### Repositories With Schema
+### Repositories With Schema (Laravel Only)
 
 ```
 php artisan make:repository Task -m
