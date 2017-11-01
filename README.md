@@ -31,8 +31,8 @@ You're all set. Run `php artisan` from the console, and you'll see the new comma
 
 ## Examples
 
-- [Repositories Without Model](#repositories-without-schema)
-- [Repositories With Model](#repositories-with-schema)
+- [Repository](#repository)
+- [Criterion](#criterion)
 
 ### Repository
 
@@ -46,7 +46,7 @@ Will output:
 - `app/Repositories/Eloquent/EloquentTaskRepository.php`
 - `app/Task.php` (if needed)
 
-### Repositories With Schema (Laravel Only)
+### Criterion
 
 ```
 php artisan make:criterion Completed
