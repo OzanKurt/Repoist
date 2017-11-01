@@ -2,31 +2,20 @@
 
 return [
 
-    /**
-     * Default paths.
-     * In this case:
-     *      app/Interfaces
-     *      app/Repositories
-     *      app/Models
-     */
-    'paths' => [
-        'contract' => 'app/Interfaces',
-        'eloquent' => 'app/Repositories',
-        'model' => 'app/Models',
-    ],
-    /**
-     * Configure the naming convention you wish for your repositories.
-     *
-     * Example: php artisan make:repository Users
-     *      - Contract: UsersRepository
-     *      - Eloquent: EloquentUsersRepository
-     */
-    'fileNames' => [
+	/**
+	 * Namespaces are being prefixed with the applications base namespace.
+	 */
+	'namespaces' => [
+	    'contracts' => 'Repositories\Contracts',
+	    'repositories' => 'Repositories\Eloquent',
+	],
 
-        'contract' => '{name}RepositoryInterface',
-        'eloquent' => '{name}RepositoryEloquent',
-        'model' => '{name}Eloquent',
-
-    ],
+	/**
+	 * Paths will be used with the `app_path()` function to reach app directory.
+	 */
+	'paths' => [
+	    'contracts' => 'Repositories/Contracts/',
+	    'repositories' => 'Repositories/Eloquent/',
+	],
 
 ];

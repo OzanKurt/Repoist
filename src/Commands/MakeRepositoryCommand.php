@@ -2,10 +2,7 @@
 
 namespace Kurt\Repoist\Commands;
 
-use Artisan;
-use Illuminate\Console\Command;
-
-class MakeRepositoryCommand extends Command
+class MakeRepositoryCommand extends RepoistCommand
 {
     /**
      * The name and signature of the console command.
@@ -21,16 +18,29 @@ class MakeRepositoryCommand extends Command
      */
     protected $description = 'Create a new repository';
 
-    private $stubs = [
+    /**
+     * Stub paths.
+     * 
+     * @var array
+     */
+    protected $stubs = [
         'contract' => __DIR__.'/../stubs/Contracts/ExampleRepository.php',
         'repository' => __DIR__.'/../stubs/Eloquent/EloquentExampleRepository.php',
     ];
 
-    private $fileManager;
+    /**
+     * Model with full namespace.
+     * 
+     * @var string
+     */
+    protected $model;
 
-    private $model;
-    private $modelName;
-    private $appNamespace;
+    /**
+     * Model class name.
+     * 
+     * @var string
+     */
+    protected $modelName;
 
     /**
      * Create a new command instance.
@@ -40,8 +50,6 @@ class MakeRepositoryCommand extends Command
     public function __construct()
     {
         parent::__construct();
-
-        $this->fileManager = app('files');
     }
 
     /**
@@ -51,18 +59,17 @@ class MakeRepositoryCommand extends Command
      */
     public function handle()
     {
-        $this->appNamespace = $this->laravel->getNamespace();
-
         $this->checkModel();
 
         [$contract, $contractName] = $this->createContract();
 
         $this->createRepository($contract, $contractName);
-
-        dd('Done!');
     }
 
-    private function createContract()
+    /**
+     * Create a new contract
+     */
+    protected function createContract()
     {
         $content = $this->fileManager->get($this->stubs['contract']);
 
@@ -82,9 +89,10 @@ class MakeRepositoryCommand extends Command
         }
 
         if ($this->laravel->runningInConsole() && $this->fileManager->exists($filePath)) {
-        	$response = $this->ask("The repository [{$fileName}] already exists. Do you want to overwrite it?", "Yes");
+        	$response = $this->ask("The contract [{$fileName}] already exists. Do you want to overwrite it?", "Yes");
 
             if ($response != "Yes") {
+                $this->line("The contract [{$fileName}] will not be overwritten.");
             	return;
             }
 
@@ -93,10 +101,15 @@ class MakeRepositoryCommand extends Command
         	$this->fileManager->put($filePath, $content);
         }
 
+        $this->line("The contract [{$fileName}] has been created.");
+
         return [$this->config('namespaces.contracts').'\\'.$fileName, $fileName];
     }
 
-    private function createRepository($contract, $contractName)
+    /**
+     * Create a new repository
+     */
+    protected function createRepository($contract, $contractName)
     {
         $content = $this->fileManager->get($this->stubs['repository']);
 
@@ -123,19 +136,22 @@ class MakeRepositoryCommand extends Command
         	$response = $this->ask("The repository [{$fileName}] already exists. Do you want to overwrite it?", "Yes");
 
             if ($response != "Yes") {
+                $this->line("The repository [{$fileName}] will not be overwritten.");
             	return;
             }
         }
+
+        $this->line("The repository [{$fileName}] has been created.");
 
     	$this->fileManager->put($filePath, $content);
     }
 
     /**
-     * Checks the models existance.
+     * Check the models existance, create if wanted.
      */
-    private function checkModel()
+    protected function checkModel()
     {
-        $model = $this->appNamespace.$this->argument('model');
+        $model = $this->laravel->getNamespace().$this->argument('model');
 
         $this->model = str_replace('/', '\\', $model);
 
@@ -150,16 +166,13 @@ class MakeRepositoryCommand extends Command
 
                     $this->line("Model [{$this->model}] has been successfully created.");
                 }
+
+                $this->line("Model [{$this->model}] is not being created.");
             }
         }
 
         $modelParts = explode('\\', $this->model);
 
         $this->modelName = array_pop($modelParts);
-    }
-
-    private function config($key)
-    {
-        return config('repoist.'.$key);
     }
 }

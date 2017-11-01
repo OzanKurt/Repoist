@@ -1,48 +1,40 @@
 # Repoist
 
-Laravel and Lumen 5 repository generator.
+Laravel 5.5 repository generator.
 
 ## Usage
 
 ### Step 1: Install Through Composer
 
 ```
-composer require ozankurt/repoist --dev
+composer require ozankurt/repoist
 ```
 
-### Step 2: Add the Service Provider
+### Step 2: Register the Service Provider
 
-You'll only want to use these generators for local development, so you don't want to update the production  `providers` array in `config/app.php`. Instead, add the provider in `app/Providers/AppServiceProvider.php`, like so:
+Add the service provider to `config/app.php`.
 
 ```php
-public function register()
-{
-	if ($this->app->environment('local')) {
-        /**
-         * Uncomment the following line in Lumen
-         */
-		//$this->app->configure('repoist');
-		$this->app->register('Kurt\Repoist\RepoistServiceProvider');
-	}
-}
+	/*
+	 * Package Service Providers...
+	 */
+	Kurt\Repoist\RepoistServiceProvider::class,
 ```
 
 ### Step 3: Publish and edit the configurations
 
-**In Laravel:** Run `php artisan vendor:publish` from the console to configure the Repoist according to your needs.
- 
-**In Lumen:** Manually copy the config file `vendor/ozankurt/repoist/src/config/repoist.php` to your `config` directory
+**In Laravel:** Run `php artisan vendor:publish --tag=repoist-config` from the console to configure the Repoist according to your needs.
 
 ### Step 4: Run Artisan!
 
-You're all set. Run `php artisan` from the console, and you'll see the new commands in the `make:repository` namespace section.
+You're all set. Run `php artisan` from the console, and you'll see the new commands.
 
 ## Examples
 
 - [Repositories Without Model](#repositories-without-schema)
 - [Repositories With Model](#repositories-with-schema)
 
-### Repositories Without Schema
+### Repository
 
 ```
 php artisan make:repository Task
@@ -50,20 +42,19 @@ php artisan make:repository Task
 
 Will output:
 
-- `app/Interfaces/Task/TaskRepositoryInterface.php` (contract)
-- `app/Repositories/Task/TaskRepositoryEloquent.php`
+- `app/Contracts/Task/TaskRepository.php` (contract)
+- `app/Repositories/Eloquent/EloquentTaskRepository.php`
+- `app/Task.php` (if needed)
 
 ### Repositories With Schema (Laravel Only)
 
 ```
-php artisan make:repository Task -m
+php artisan make:criterion Completed
 ```
 
 Will output:
 
-- `app/Interfaces/Task/TaskRepositoryInterface.php` (contract)
-- `app/Repositories/Task/TaskRepositoryEloquent.php`
-- `app/Models/TaskEloquent.php`
+- `app/Repositories/Eloquent/Criteria/Completed.php`
 
 ## Configurations
 
@@ -74,33 +65,21 @@ If somehow you cannot publish the `config/repoist.php` from artisan here you can
 
 return [
 
-    /**
-     * Default paths.
-     * In this case:
-     *      app/Interfaces
-     *      app/Repositories
-     *      app/Models
-     */
-    'paths' => [
-            'contract' => 'app/Interfaces',
-            'eloquent' => 'app/Repositories',
-            'model' => 'app/Models',
-    ],
-    /**
-     * Configure the naming convention you wish for your repositories.
-     *
-     * Example: php artisan make:repository Users
-     *      - Contract: UsersRepository
-     *      - Eloquent: EloquentUsersRepository
-     *      - Model   : UsersEloquent
-     */
-    'fileNames' => [
+	/**
+	 * Namespaces are being prefixed with the applications base namespace.
+	 */
+	'namespaces' => [
+	    'contracts' => 'Repositories\Contracts',
+	    'repositories' => 'Repositories\Eloquent',
+	],
 
-        'contract' => '{name}RepositoryInterface',
-        'eloquent' => '{name}RepositoryEloquent',
-        'model' => '{name}Eloquent',
-
-    ],
+	/**
+	 * Paths will be used with the `app_path()` function to reach app directory.
+	 */
+	'paths' => [
+	    'contracts' => 'Repositories/Contracts/',
+	    'repositories' => 'Repositories/Eloquent/',
+	],
 
 ];
 ```

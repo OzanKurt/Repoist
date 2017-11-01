@@ -1,6 +1,6 @@
 {
 	"name": "ozankurt/repoist",
-	"description": "Laravel 5 repository generator.",
+	"description": "Laravel 5.5 repository generator.",
 	"keywords": ["laravel", "repository", "repoist", "database"],
 	"license": "MIT",
 	"authors": [

@@ -36,6 +36,10 @@ class RepoistServiceProvider extends ServiceProvider
     {
     	$this->mergeConfigFrom(__DIR__.'/config/repoist.php', 'repoist');
 
+    	$this->publishes([
+	        __DIR__.'/config/package.php' => config_path('repoist.php')
+	    ], 'repoist-config');
+
         $this->registerCommands();
     }
 

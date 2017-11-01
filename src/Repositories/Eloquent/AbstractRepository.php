@@ -89,6 +89,6 @@ abstract class AbstractRepository implements RepositoryInterface, CriteriaInterf
             throw new NoEntityDefined();
         }
 
-        return app()->make($this->entity());
+        return app($this->entity());
     }
 }
