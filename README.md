@@ -60,7 +60,7 @@ Will output:
 
 If somehow you cannot publish the `config/repoist.php` from artisan here you can copy and use it.
 
-```
+```php
 <?php
 
 return [
