@@ -3,9 +3,20 @@
 namespace Kurt\Repoist;
 
 use Illuminate\Support\ServiceProvider;
+use Kurt\Repoist\Commands\MakeCriterionCommand;
+use Kurt\Repoist\Commands\MakeRepositoryCommand;
 
 class RepoistServiceProvider extends ServiceProvider
 {
+    /**
+     * Commands to be registered.
+     * @var array
+     */
+    private $repoistCommands = [
+        MakeCriterionCommand::class,
+        MakeRepositoryCommand::class,
+    ];
+
     /**
      * Bootstrap the application services.
      *
@@ -13,7 +24,7 @@ class RepoistServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        $this->publishConfig();
+        //
     }
 
     /**
@@ -23,27 +34,16 @@ class RepoistServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->registerRepoist();
+    	$this->mergeConfigFrom(__DIR__.'/config/repoist.php', 'repoist');
+
+        $this->registerCommands();
     }
 
     /**
-     * Register Repoist Commands.
-     *
-     * @return void
+     * Registers repoist commands.
      */
-    private function registerRepoist()
+    public function registerCommands()
     {
-        $this->app->singleton('command.kurt.repoist', function ($app) {
-            return $app['Kurt\Repoist\Commands\RepositoryMakeCommand'];
-        });
-
-        $this->commands('command.kurt.repoist');
-    }
-
-    private function publishConfig()
-    {
-        $this->publishes([
-            __DIR__ . '/config/repoist.php' => config_path('repoist.php'),
-        ]);
+    	$this->commands($this->repoistCommands);
     }
 }
