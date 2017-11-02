@@ -61,7 +61,7 @@ class MakeRepositoryCommand extends RepoistCommand
     {
         $this->checkModel();
 
-        [$contract, $contractName] = $this->createContract();
+        list($contract, $contractName) = $this->createContract();
 
         $this->createRepository($contract, $contractName);
     }
