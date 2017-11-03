@@ -83,3 +83,18 @@ return [
 
 ];
 ```
+
+
+**Available Methods** <br>
+All listed methods for the Eloquent repository
+
+| Method                | Usage
+| --------------------- | ----------------------------------------------------------
+| **all**               | $repo->all()
+| **find**            	| $repo->find($id);
+| **findWhere**         | $repo->findWhere($column, $value);
+| **findWhereFirst**    | $repo->findWhereFirst($column, $value);
+| **paginate**          | $repo->paginate($perPage = 10);
+| **create**            | $repo->create(array $properties);
+| **update**            | $repo->update($id, array $properties);
+| **delete**            | $repo->delete($id);
