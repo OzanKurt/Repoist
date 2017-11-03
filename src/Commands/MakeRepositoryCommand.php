@@ -61,7 +61,7 @@ class MakeRepositoryCommand extends RepoistCommand
     {
         $this->checkModel();
 
-        [$contract, $contractName] = $this->createContract();
+        list($contract, $contractName) = $this->createContract();
 
         $this->createRepository($contract, $contractName);
     }
@@ -85,7 +85,7 @@ class MakeRepositoryCommand extends RepoistCommand
         $filePath = $fileDirectory.$fileName.'.php';
 
         if (!$this->fileManager->exists($fileDirectory)) {
-        	$this->fileManager->makeDirectory($fileDirectory, 755, true);
+        	$this->fileManager->makeDirectory($fileDirectory, 0755, true);
         }
 
         if ($this->laravel->runningInConsole() && $this->fileManager->exists($filePath)) {
@@ -129,7 +129,7 @@ class MakeRepositoryCommand extends RepoistCommand
 
         // Check if the directory exists, if not create...
         if (!$this->fileManager->exists($fileDirectory)) {
-        	$this->fileManager->makeDirectory($fileDirectory, 755, true);
+        	$this->fileManager->makeDirectory($fileDirectory, 0755, true);
         }
 
         if ($this->laravel->runningInConsole() && $this->fileManager->exists($filePath)) {
