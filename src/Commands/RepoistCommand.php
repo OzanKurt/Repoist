@@ -13,11 +13,19 @@ class RepoistCommand extends Command
      */
     protected $fileManager;
 
+    /**
+     * Application namespace
+     * 
+     * @var string
+     */
+    protected $appNamespace;
+
 	public function __construct()
 	{
 		parent::__construct();
 		
 		$this->fileManager = app('files');
+		$this->appNamespace = app()->getNamespace();
 	}
 
 	/**
@@ -29,6 +37,17 @@ class RepoistCommand extends Command
     protected function config($key)
     {
         return config('repoist.'.$key);
+    }
+
+    /**
+     * Determine if the user input is positive.
+     * 
+     * @param  string
+     * @return boolean
+     */
+    public function isResponsePositive($response)
+    {
+    	return in_array(strtolower($response), ['y', 'yes']);
     }
 
 }
