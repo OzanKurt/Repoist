@@ -2,6 +2,8 @@
 
 namespace Kurt\Repoist\Commands;
 
+use Artisan;
+
 class MakeRepositoryCommand extends RepoistCommand
 {
     /**
@@ -74,7 +76,7 @@ class MakeRepositoryCommand extends RepoistCommand
         $content = $this->fileManager->get($this->stubs['contract']);
 
         $replacements = [
-            '%namespaces.contracts%' => $this->config('namespaces.contracts'),
+            '%namespaces.contracts%' => $this->appNamespace.$this->config('namespaces.contracts'),
             '%modelName%' => $this->modelName,
         ];
 
@@ -91,7 +93,7 @@ class MakeRepositoryCommand extends RepoistCommand
         if ($this->laravel->runningInConsole() && $this->fileManager->exists($filePath)) {
         	$response = $this->ask("The contract [{$fileName}] already exists. Do you want to overwrite it?", "Yes");
 
-            if ($response != "Yes") {
+            if ($this->isResponsePositive($response)) {
                 $this->line("The contract [{$fileName}] will not be overwritten.");
             	return;
             }
@@ -118,7 +120,7 @@ class MakeRepositoryCommand extends RepoistCommand
             '%contractName%' => $contractName,
             '%model%' => $this->model,
             '%modelName%' => $this->modelName,
-            '%namespaces.repositories%' => $this->config('namespaces.repositories'),
+            '%namespaces.repositories%' => $this->appNamespace.$this->config('namespaces.repositories'),
         ];
 
         $content = str_replace(array_keys($replacements), array_values($replacements), $content);
@@ -135,7 +137,7 @@ class MakeRepositoryCommand extends RepoistCommand
         if ($this->laravel->runningInConsole() && $this->fileManager->exists($filePath)) {
         	$response = $this->ask("The repository [{$fileName}] already exists. Do you want to overwrite it?", "Yes");
 
-            if ($response != "Yes") {
+            if (!$this->isResponsePositive($response)) {
                 $this->line("The repository [{$fileName}] will not be overwritten.");
             	return;
             }
@@ -151,23 +153,23 @@ class MakeRepositoryCommand extends RepoistCommand
      */
     protected function checkModel()
     {
-        $model = $this->laravel->getNamespace().$this->argument('model');
+        $model = $this->appNamespace.$this->argument('model');
 
         $this->model = str_replace('/', '\\', $model);
 
         if ($this->laravel->runningInConsole()) {
-            if (!class_exists($model)) {
+            if (!class_exists($this->model)) {
                 $response = $this->ask("Model [{$this->model}] does not exist. Would you like to create it?", "Yes");
                 
-                if ($response == "Yes") {
+                if ($this->isResponsePositive($response)) {
                     Artisan::call('make:model', [
                         'name' => $this->model,
                     ]);
 
                     $this->line("Model [{$this->model}] has been successfully created.");
+                } else {
+                	$this->line("Model [{$this->model}] is not being created.");                	
                 }
-
-                $this->line("Model [{$this->model}] is not being created.");
             }
         }
 
