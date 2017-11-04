@@ -6,13 +6,16 @@ use Kurt\Repoist\Repositories\Criteria\CriterionInterface;
 
 class ByUser implements CriterionInterface
 {
-	/**
-	 * User id.
-	 * 
-	 * @var integer
-	 */
+    /**
+     * User id.
+     *
+     * @var integer
+     */
     protected $userId;
 
+    /**
+     * @param $userId
+     */
     public function __construct($userId)
     {
         $this->userId = $userId;
@@ -20,7 +23,7 @@ class ByUser implements CriterionInterface
 
     /**
      * Apply the query filtering.
-     * 
+     *
      * @param  \Illuminate\Database\Eloquent\Builder $entity
      * @return \Illuminate\Database\Eloquent\Builder
      */
