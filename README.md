@@ -94,6 +94,7 @@ All listed methods for the Eloquent repository
 | **find**            	| $repo->find($id);
 | **findWhere**         | $repo->findWhere($column, $value);
 | **findWhereFirst**    | $repo->findWhereFirst($column, $value);
+| **findWhereLike**     | $repo->findWhereLike($column, $value, $paginate = 0);
 | **paginate**          | $repo->paginate($perPage = 10);
 | **create**            | $repo->create(array $properties);
 | **update**            | $repo->update($id, array $properties);
