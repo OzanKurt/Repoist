@@ -74,16 +74,23 @@ abstract class AbstractRepository implements RepositoryInterface, CriteriaInterf
     }
 
     /**
-     * @param $column
-     * @param $value
-     * @param number $paginate
-     * @return mixed
+     * {@inheritdoc}
      */
     public function findWhereLike($column, $value, $paginate = 0)
     {
-        $model = $this->entity->where($column, 'like', $value);
-
-        return $paginate > 0 ? $model->paginate($paginate) : $model->get();
+        $query = $this->entity;
+        if (is_array($column)) {
+            $i=0;
+            foreach ($column as $columnItem) {
+                if ($i==0) {
+                    $query->where($column, 'like', $value);
+                } else {
+                    $query->orWhere($column, 'like', $value);
+                }
+                $i++;
+            }
+        }
+        return $paginate > 0 ? $query->paginate($paginate) : $query->get();
     }
 
     /**
