@@ -2,7 +2,7 @@
 
 namespace Kurt\Repoist\Commands;
 
-use Artisan;
+use Illuminate\Support\Facades\Artisan;
 
 class MakeRepositoryCommand extends RepoistCommand
 {
@@ -22,7 +22,7 @@ class MakeRepositoryCommand extends RepoistCommand
 
     /**
      * Stub paths.
-     * 
+     *
      * @var array
      */
     protected $stubs = [
@@ -32,14 +32,14 @@ class MakeRepositoryCommand extends RepoistCommand
 
     /**
      * Model with full namespace.
-     * 
+     *
      * @var string
      */
     protected $model;
 
     /**
      * Model class name.
-     * 
+     *
      * @var string
      */
     protected $modelName;
@@ -160,7 +160,7 @@ class MakeRepositoryCommand extends RepoistCommand
         if ($this->laravel->runningInConsole()) {
             if (!class_exists($this->model)) {
                 $response = $this->ask("Model [{$this->model}] does not exist. Would you like to create it?", "Yes");
-                
+
                 if ($this->isResponsePositive($response)) {
                     Artisan::call('make:model', [
                         'name' => $this->model,
@@ -168,7 +168,7 @@ class MakeRepositoryCommand extends RepoistCommand
 
                     $this->line("Model [{$this->model}] has been successfully created.");
                 } else {
-                	$this->line("Model [{$this->model}] is not being created.");                	
+                	$this->line("Model [{$this->model}] is not being created.");
                 }
             }
         }
