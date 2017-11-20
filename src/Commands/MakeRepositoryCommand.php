@@ -85,7 +85,7 @@ class MakeRepositoryCommand extends RepoistCommand
         $content = str_replace(array_keys($replacements), array_values($replacements), $content);
 
         $fileName      = $this->modelName.'Repository';
-        $fileDirectory = app()->basePath().'/'.$this->config('paths.contracts');
+        $fileDirectory = app()->basePath().'/app/'.$this->config('paths.contracts');
         $filePath      = $fileDirectory.$fileName.'.php';
 
         if (!$this->fileManager->exists($fileDirectory)) {
@@ -128,7 +128,7 @@ class MakeRepositoryCommand extends RepoistCommand
         $content = str_replace(array_keys($replacements), array_values($replacements), $content);
 
         $fileName      = 'Eloquent'.$this->modelName.'Repository';
-        $fileDirectory = app()->basePath().'/'.$this->config('paths.repositories');
+        $fileDirectory = app()->basePath().'/app/'.$this->config('paths.repositories');
         $filePath      = $fileDirectory.$fileName.'.php';
 
         // Check if the directory exists, if not create...

@@ -57,7 +57,7 @@ class MakeCriterionCommand extends RepoistCommand
         $content = str_replace(array_keys($replacements), array_values($replacements), $content);
 
         $fileName      = $criterion;
-        $fileDirectory = app()->basePath().'/'.$this->config('paths.repositories').'Criteria';
+        $fileDirectory = app()->basePath().'/app/'.$this->config('paths.repositories').'Criteria';
         $filePath      = $fileDirectory.'/'.$fileName.'.php';
 
         if (!$this->fileManager->exists($fileDirectory)) {
