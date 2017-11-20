@@ -61,9 +61,9 @@ class MakeRepositoryCommand extends RepoistCommand
      */
     public function handle()
     {
-        if (!$this->isLumen()) {
-            $this->checkModel();
-        }
+
+        $this->checkModel();
+
 
         list($contract, $contractName) = $this->createContract();
 
@@ -159,7 +159,7 @@ class MakeRepositoryCommand extends RepoistCommand
 
         $this->model = str_replace('/', '\\', $model);
 
-        if ($this->laravel->runningInConsole()) {
+        if (!$this->isLumen() && $this->laravel->runningInConsole()) {
             if (!class_exists($this->model)) {
                 $response = $this->ask("Model [{$this->model}] does not exist. Would you like to create it?", 'Yes');
 
