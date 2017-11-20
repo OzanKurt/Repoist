@@ -84,9 +84,9 @@ return [
 ];
 ```
 
+## Configurations
 
-**Available Methods** <br>
-All listed methods for the Eloquent repository
+Default methods of the `Kurt\Repoist\Repositories\Eloquent\AbstractRepository`.
 
 | Method                | Usage
 | --------------------- | ----------------------------------------------------------
@@ -99,3 +99,71 @@ All listed methods for the Eloquent repository
 | **create**            | $repo->create(array $properties);
 | **update**            | $repo->update($id, array $properties);
 | **delete**            | $repo->delete($id);
+
+## Example Usage
+
+Customer.php
+```php
+<?php
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Customer extends Model
+{
+    /**
+     * Customer has many Tickets.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function tickets()
+    {
+    	return $this->hasMany(Ticket::class, 'customer_id', 'id');
+    }
+}
+```
+EloquentCustomerRepository.php
+```php
+<?php
+namespace App\Repositories\Eloquent;
+
+use App\Models\Customer;
+use App\Repositories\Contracts\CustomerRepository;
+use Kurt\Repoist\Repositories\Eloquent\AbstractRepository;
+
+class EloquentCustomerRepository extends AbstractRepository implements CustomerRepository
+{
+    public function entity()
+    {
+        return Customer::class;
+    }
+}
+```
+PagesController.php
+```php
+<?php
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\Repositories\Contracts\CustomerRepository;
+use Kurt\Repoist\Repositories\Eloquent\Criteria\EagerLoad;
+
+class PagesController extends Controller
+{
+	private $customerRepository;
+
+	function __construct(CustomerRepository $customerRepository)
+	{
+		$this->customerRepository = $customerRepository;
+	}
+    
+    public function getHome()
+    {
+        $customersWithTickets = $this->customerRepository->withCriteria([
+        	new EagerLoad(['tickets']),
+        ])->all();
+
+        return $customersWithTickets;
+    }
+}
+```
