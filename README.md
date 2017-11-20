@@ -29,6 +29,23 @@ Add the service provider to `config/app.php`.
 
 You're all set. Run `php artisan` from the console, and you'll see the new commands.
 
+### For Lumen
+
+In `bootstrap\app.php` enable Facades and Eloquent, also enable the configuration file.
+
+```
+$app->withFacades();
+$app->withEloquent();
+
+$app->configure('repoist');
+```
+
+In the Register service providers section add:
+
+```
+$app->register(Kurt\Repoist\RepoistServiceProvider::class);
+```
+
 ## Examples
 
 - [Repository](#repository)
