@@ -61,7 +61,9 @@ class MakeRepositoryCommand extends RepoistCommand
      */
     public function handle()
     {
-        $this->checkModel();
+        if (!$this->isLumen()) {
+            $this->checkModel();
+        }
 
         list($contract, $contractName) = $this->createContract();
 
@@ -176,5 +178,10 @@ class MakeRepositoryCommand extends RepoistCommand
         $modelParts = explode('\\', $this->model);
 
         $this->modelName = array_pop($modelParts);
+    }
+
+    protected function isLumen()
+    {
+        return str_contains($this->app->version(), 'Lumen');
     }
 }
