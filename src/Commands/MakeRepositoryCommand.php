@@ -182,6 +182,6 @@ class MakeRepositoryCommand extends RepoistCommand
 
     protected function isLumen()
     {
-        return str_contains($this->app->version(), 'Lumen');
+        return str_contains(app()->version(), 'Lumen');
     }
 }
