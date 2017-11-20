@@ -74,7 +74,7 @@ return [
 	],
 
 	/**
-	 * Paths will be used with the `app_path()` function to reach app directory.
+	 * Paths will be used with the `app()->basePath().'/'.` function to reach app directory.
 	 */
 	'paths' => [
 	    'contracts' => 'Repositories/Contracts/',
@@ -156,7 +156,7 @@ class PagesController extends Controller
 	{
 		$this->customerRepository = $customerRepository;
 	}
-    
+
     public function getHome()
     {
         $customersWithTickets = $this->customerRepository->withCriteria([
