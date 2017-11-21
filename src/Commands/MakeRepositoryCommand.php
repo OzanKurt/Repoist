@@ -95,7 +95,7 @@ class MakeRepositoryCommand extends RepoistCommand
         if ($this->laravel->runningInConsole() && $this->fileManager->exists($filePath)) {
             $response = $this->ask("The contract [{$fileName}] already exists. Do you want to overwrite it?", 'Yes');
 
-            if ($this->isResponsePositive($response)) {
+            if (!$this->isResponsePositive($response)) {
                 $this->line("The contract [{$fileName}] will not be overwritten.");
                 return;
             }
