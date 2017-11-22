@@ -90,7 +90,7 @@ abstract class AbstractRepository implements RepositoryInterface, CriteriaInterf
                 $i++;
             }
         } else {
-          $query->where($column, 'like', $value)
+          $query->where($column, 'like', $value);
         }
         return $paginate > 0 ? $query->paginate($paginate) : $query->get();
     }
