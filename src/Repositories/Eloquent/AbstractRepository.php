@@ -80,9 +80,9 @@ abstract class AbstractRepository implements RepositoryInterface, CriteriaInterf
     {
         $query = $this->entity;
         if (is_array($column)) {
-            $i=0;
+            $i = 0;
             foreach ($column as $columnItem) {
-                if ($i==0) {
+                if ($i == 0) {
                     $query->where($column, 'like', $value);
                 } else {
                     $query->orWhere($column, 'like', $value);
@@ -90,7 +90,7 @@ abstract class AbstractRepository implements RepositoryInterface, CriteriaInterf
                 $i++;
             }
         } else {
-          $query->where($column, 'like', $value);
+            $query->where($column, 'like', $value);
         }
         return $paginate > 0 ? $query->paginate($paginate) : $query->get();
     }
