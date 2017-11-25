@@ -67,7 +67,7 @@ class MakeCriterionCommand extends RepoistCommand
         if ($this->laravel->runningInConsole() && $this->fileManager->exists($filePath)) {
             $response = $this->ask("The criterion [{$fileName}] already exists. Do you want to overwrite it?", 'Yes');
 
-            if ($response != 'Yes') {
+            if (!$this->isResponsePositive($response)) {
                 $this->line("The criterion [{$fileName}] will not be overwritten.");
                 return;
             }
