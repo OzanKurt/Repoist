@@ -29,6 +29,23 @@ Add the service provider to `config/app.php`.
 
 You're all set. Run `php artisan` from the console, and you'll see the new commands.
 
+### For Lumen
+
+In `bootstrap\app.php` enable Facades and Eloquent, also enable the configuration file.
+
+```
+$app->withFacades();
+$app->withEloquent();
+
+$app->configure('repoist');
+```
+
+In the Register service providers section add:
+
+```
+$app->register(Kurt\Repoist\RepoistServiceProvider::class);
+```
+
 ## Examples
 
 - [Repository](#repository)
@@ -74,7 +91,7 @@ return [
 	],
 
 	/**
-	 * Paths will be used with the `app_path()` function to reach app directory.
+	 * Paths will be used with the `app()->basePath().'/app/'` function to reach app directory.
 	 */
 	'paths' => [
 	    'contracts' => 'Repositories/Contracts/',
@@ -94,6 +111,7 @@ Default methods of the `Kurt\Repoist\Repositories\Eloquent\AbstractRepository`.
 | **find**            	| $repo->find($id);
 | **findWhere**         | $repo->findWhere($column, $value);
 | **findWhereFirst**    | $repo->findWhereFirst($column, $value);
+| **findWhereLike**     | $repo->findWhereLike($column, $value, $paginate = 0);
 | **paginate**          | $repo->paginate($perPage = 10);
 | **create**            | $repo->create(array $properties);
 | **update**            | $repo->update($id, array $properties);
@@ -155,7 +173,7 @@ class PagesController extends Controller
 	{
 		$this->customerRepository = $customerRepository;
 	}
-    
+
     public function getHome()
     {
         $customersWithTickets = $this->customerRepository->withCriteria([

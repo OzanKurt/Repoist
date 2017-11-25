@@ -2,7 +2,7 @@
 
 namespace Kurt\Repoist\Commands;
 
-use Artisan;
+use Illuminate\Support\Facades\Artisan;
 
 class MakeRepositoryCommand extends RepoistCommand
 {
@@ -22,24 +22,24 @@ class MakeRepositoryCommand extends RepoistCommand
 
     /**
      * Stub paths.
-     * 
+     *
      * @var array
      */
     protected $stubs = [
-        'contract' => __DIR__.'/../stubs/Contracts/ExampleRepository.php',
+        'contract'   => __DIR__.'/../stubs/Contracts/ExampleRepository.php',
         'repository' => __DIR__.'/../stubs/Eloquent/EloquentExampleRepository.php',
     ];
 
     /**
      * Model with full namespace.
-     * 
+     *
      * @var string
      */
     protected $model;
 
     /**
      * Model class name.
-     * 
+     *
      * @var string
      */
     protected $modelName;
@@ -61,7 +61,9 @@ class MakeRepositoryCommand extends RepoistCommand
      */
     public function handle()
     {
+
         $this->checkModel();
+
 
         list($contract, $contractName) = $this->createContract();
 
@@ -77,30 +79,30 @@ class MakeRepositoryCommand extends RepoistCommand
 
         $replacements = [
             '%namespaces.contracts%' => $this->appNamespace.$this->config('namespaces.contracts'),
-            '%modelName%' => $this->modelName,
+            '%modelName%'            => $this->modelName,
         ];
 
         $content = str_replace(array_keys($replacements), array_values($replacements), $content);
 
-        $fileName = $this->modelName.'Repository';
-        $fileDirectory = app_path($this->config('paths.contracts'));
-        $filePath = $fileDirectory.$fileName.'.php';
+        $fileName      = $this->modelName.'Repository';
+        $fileDirectory = app()->basePath().'/app/'.$this->config('paths.contracts');
+        $filePath      = $fileDirectory.$fileName.'.php';
 
         if (!$this->fileManager->exists($fileDirectory)) {
-        	$this->fileManager->makeDirectory($fileDirectory, 0755, true);
+            $this->fileManager->makeDirectory($fileDirectory, 0755, true);
         }
 
         if ($this->laravel->runningInConsole() && $this->fileManager->exists($filePath)) {
-        	$response = $this->ask("The contract [{$fileName}] already exists. Do you want to overwrite it?", "Yes");
+            $response = $this->ask("The contract [{$fileName}] already exists. Do you want to overwrite it?", 'Yes');
 
-            if ($this->isResponsePositive($response)) {
+            if (!$this->isResponsePositive($response)) {
                 $this->line("The contract [{$fileName}] will not be overwritten.");
-            	return;
+                return;
             }
 
-        	$this->fileManager->put($filePath, $content);
+            $this->fileManager->put($filePath, $content);
         } else {
-        	$this->fileManager->put($filePath, $content);
+            $this->fileManager->put($filePath, $content);
         }
 
         $this->line("The contract [{$fileName}] has been created.");
@@ -116,36 +118,36 @@ class MakeRepositoryCommand extends RepoistCommand
         $content = $this->fileManager->get($this->stubs['repository']);
 
         $replacements = [
-            '%contract%' => $contract,
-            '%contractName%' => $contractName,
-            '%model%' => $this->model,
-            '%modelName%' => $this->modelName,
+            '%contract%'                => $contract,
+            '%contractName%'            => $contractName,
+            '%model%'                   => $this->model,
+            '%modelName%'               => $this->modelName,
             '%namespaces.repositories%' => $this->appNamespace.$this->config('namespaces.repositories'),
         ];
 
         $content = str_replace(array_keys($replacements), array_values($replacements), $content);
 
-        $fileName = 'Eloquent'.$this->modelName.'Repository';
-        $fileDirectory = app_path($this->config('paths.repositories'));
-        $filePath = $fileDirectory.$fileName.'.php';
+        $fileName      = 'Eloquent'.$this->modelName.'Repository';
+        $fileDirectory = app()->basePath().'/app/'.$this->config('paths.repositories');
+        $filePath      = $fileDirectory.$fileName.'.php';
 
         // Check if the directory exists, if not create...
         if (!$this->fileManager->exists($fileDirectory)) {
-        	$this->fileManager->makeDirectory($fileDirectory, 0755, true);
+            $this->fileManager->makeDirectory($fileDirectory, 0755, true);
         }
 
         if ($this->laravel->runningInConsole() && $this->fileManager->exists($filePath)) {
-        	$response = $this->ask("The repository [{$fileName}] already exists. Do you want to overwrite it?", "Yes");
+            $response = $this->ask("The repository [{$fileName}] already exists. Do you want to overwrite it?", 'Yes');
 
             if (!$this->isResponsePositive($response)) {
                 $this->line("The repository [{$fileName}] will not be overwritten.");
-            	return;
+                return;
             }
         }
 
         $this->line("The repository [{$fileName}] has been created.");
 
-    	$this->fileManager->put($filePath, $content);
+        $this->fileManager->put($filePath, $content);
     }
 
     /**
@@ -157,10 +159,10 @@ class MakeRepositoryCommand extends RepoistCommand
 
         $this->model = str_replace('/', '\\', $model);
 
-        if ($this->laravel->runningInConsole()) {
+        if (!$this->isLumen() && $this->laravel->runningInConsole()) {
             if (!class_exists($this->model)) {
-                $response = $this->ask("Model [{$this->model}] does not exist. Would you like to create it?", "Yes");
-                
+                $response = $this->ask("Model [{$this->model}] does not exist. Would you like to create it?", 'Yes');
+
                 if ($this->isResponsePositive($response)) {
                     Artisan::call('make:model', [
                         'name' => $this->model,
@@ -168,7 +170,7 @@ class MakeRepositoryCommand extends RepoistCommand
 
                     $this->line("Model [{$this->model}] has been successfully created.");
                 } else {
-                	$this->line("Model [{$this->model}] is not being created.");                	
+                    $this->line("Model [{$this->model}] is not being created.");
                 }
             }
         }
@@ -176,5 +178,10 @@ class MakeRepositoryCommand extends RepoistCommand
         $modelParts = explode('\\', $this->model);
 
         $this->modelName = array_pop($modelParts);
+    }
+
+    protected function isLumen()
+    {
+        return str_contains(app()->version(), 'Lumen');
     }
 }

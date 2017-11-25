@@ -44,37 +44,37 @@ class MakeCriterionCommand extends RepoistCommand
     protected function createCriterion()
     {
         $content = $this->fileManager->get(
-        	__DIR__.'/../stubs/Eloquent/Criteria/Example.php'
+            __DIR__.'/../stubs/Eloquent/Criteria/Example.php'
         );
 
         $criterion = $this->argument('criterion');
 
         $replacements = [
             '%namespaces.repositories%' => $this->config('namespaces.repositories'),
-            '%criterion%' => $criterion,
+            '%criterion%'               => $criterion,
         ];
 
         $content = str_replace(array_keys($replacements), array_values($replacements), $content);
 
-        $fileName = $criterion;
-        $fileDirectory = app_path($this->config('paths.repositories').'Criteria');
-        $filePath = $fileDirectory.'/'.$fileName.'.php';
+        $fileName      = $criterion;
+        $fileDirectory = app()->basePath().'/app/'.$this->config('paths.repositories').'Criteria';
+        $filePath      = $fileDirectory.'/'.$fileName.'.php';
 
         if (!$this->fileManager->exists($fileDirectory)) {
-        	$this->fileManager->makeDirectory($fileDirectory, 0755, true);
+            $this->fileManager->makeDirectory($fileDirectory, 0755, true);
         }
 
         if ($this->laravel->runningInConsole() && $this->fileManager->exists($filePath)) {
-        	$response = $this->ask("The criterion [{$fileName}] already exists. Do you want to overwrite it?", "Yes");
+            $response = $this->ask("The criterion [{$fileName}] already exists. Do you want to overwrite it?", 'Yes');
 
-            if ($response != "Yes") {
+            if ($response != 'Yes') {
                 $this->line("The criterion [{$fileName}] will not be overwritten.");
-            	return;
+                return;
             }
 
-        	$this->fileManager->put($filePath, $content);
+            $this->fileManager->put($filePath, $content);
         } else {
-        	$this->fileManager->put($filePath, $content);
+            $this->fileManager->put($filePath, $content);
         }
 
         $this->line("The criterion [{$fileName}] has been created.");

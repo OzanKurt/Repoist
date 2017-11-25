@@ -11,7 +11,7 @@ return [
     ],
 
     /**
-     * Paths will be used with the `app_path()` function to reach app directory.
+     * Paths will be used with the `app()->basePath().'/app/'` function to reach app directory.
      */
     'paths' => [
         'contracts'    => 'Repositories/Contracts/',
