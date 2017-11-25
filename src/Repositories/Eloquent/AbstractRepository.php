@@ -22,9 +22,9 @@ abstract class AbstractRepository implements RepositoryInterface, CriteriaInterf
     /**
      * @return mixed
      */
-    public function all()
+    public function all($paginate = null)
     {
-        return $this->entity->get();
+        return $this->processPagination($this->entity, $paginate);
     }
 
     /**
@@ -50,9 +50,11 @@ abstract class AbstractRepository implements RepositoryInterface, CriteriaInterf
      * @param $value
      * @return mixed
      */
-    public function findWhere($column, $value)
+    public function findWhere($column, $value, $paginate = null)
     {
-        return $this->entity->where($column, $value)->get();
+    	$query = $this->entity->where($column, $value);
+
+        return $this->processPagination($query, $paginate);
     }
 
     /**
@@ -76,23 +78,19 @@ abstract class AbstractRepository implements RepositoryInterface, CriteriaInterf
     /**
      * {@inheritdoc}
      */
-    public function findWhereLike($column, $value, $paginate = 0)
+    public function findWhereLike($columns, $value, $paginate = null)
     {
-        $query = $this->entity;
-        if (is_array($column)) {
-            $i = 0;
-            foreach ($column as $columnItem) {
-                if ($i == 0) {
-                    $query->where($column, 'like', $value);
-                } else {
-                    $query->orWhere($column, 'like', $value);
-                }
-                $i++;
-            }
-        } else {
-            $query->where($column, 'like', $value);
+    	$query = $this->entity;
+
+        if (is_string($columns)) {
+        	$columns = [$columns];
         }
-        return $paginate > 0 ? $query->paginate($paginate) : $query->get();
+
+		foreach ($columns as $column) {
+	        $query->orWhere($column, 'like', $value);
+		}
+
+		return $this->processPagination($query, $paginate);
     }
 
     /**
@@ -154,5 +152,10 @@ abstract class AbstractRepository implements RepositoryInterface, CriteriaInterf
         }
 
         return app($this->entity());
+    }
+
+    private function processPagination($query, $paginate)
+    {
+    	return $paginate ? $query->paginate($paginate) : $query->get();
     }
 }
