@@ -118,7 +118,7 @@ class MakeRepositoryCommand extends RepoistCommand
         $content = $this->fileManager->get($this->stubs['repository']);
 
         $replacements = [
-            '%contract%'                => $contract,
+            '%contract%'                => $this->appNamespace.$contract,
             '%contractName%'            => $contractName,
             '%model%'                   => $this->model,
             '%modelName%'               => $this->modelName,
