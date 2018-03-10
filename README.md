@@ -1,6 +1,6 @@
 # Repoist
 
-Laravel 5.5 repository generator.
+Laravel 5.6 repository generator.
 
 ## Usage
 
@@ -10,22 +10,11 @@ Laravel 5.5 repository generator.
 composer require ozankurt/repoist
 ```
 
-### Step 2: Register the Service Provider
-
-Add the service provider to `config/app.php`.
-
-```php
-	/*
-	 * Package Service Providers...
-	 */
-	Kurt\Repoist\RepoistServiceProvider::class,
-```
-
-### Step 3: Publish and edit the configurations
+### Step 2: Publish and edit the configurations
 
 **In Laravel:** Run `php artisan vendor:publish --tag=repoist-config` from the console to configure the Repoist according to your needs.
 
-### Step 4: Run Artisan!
+### Step 3: Run Artisan!
 
 You're all set. Run `php artisan` from the console, and you'll see the new commands.
 
