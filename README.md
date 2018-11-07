@@ -1,6 +1,6 @@
 # Repoist
 
-Laravel 5.6 repository generator.
+Laravel repository generator for 5.2+ versions
 
 ## Usage
 
