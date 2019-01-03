@@ -106,6 +106,9 @@ Default methods of the `Kurt\Repoist\Repositories\Eloquent\AbstractRepository`.
 | **update**            | $repo->update($id, array $properties);
 | **delete**            | $repo->delete($id);
 
+Comes with a integrated pagination functions that uses `Illuminate\Pagination\LengthAwarePaginator` to
+return a paginated response if $request->limit > 0
+
 ## Example Usage
 
 Customer.php

@@ -3,9 +3,11 @@
 namespace Kurt\Repoist\Repositories\Eloquent;
 
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Kurt\Repoist\Exceptions\NoEntityDefined;
 use Kurt\Repoist\Repositories\Contracts\RepositoryInterface;
 use Kurt\Repoist\Repositories\Criteria\CriteriaInterface;
+use Illuminate\Http\Request;
 
 abstract class AbstractRepository implements RepositoryInterface, CriteriaInterface
 {
@@ -14,9 +16,16 @@ abstract class AbstractRepository implements RepositoryInterface, CriteriaInterf
      */
     protected $entity;
 
-    public function __construct()
+    /**
+     * @var Illuminate\Http\Request
+     */
+    protected $request;
+
+
+    public function __construct(Request $request)
     {
         $this->entity = $this->resolveEntity();
+        $this->request = $request; // reading request here allows many options.
     }
 
     /**
@@ -99,7 +108,7 @@ abstract class AbstractRepository implements RepositoryInterface, CriteriaInterf
      */
     public function paginate($perPage = 10)
     {
-        return $this->entity->paginate($perPage);
+        return $this->processPagination($this->entity, $perPage);
     }
 
     /**
@@ -156,6 +165,31 @@ abstract class AbstractRepository implements RepositoryInterface, CriteriaInterf
 
     private function processPagination($query, $paginate)
     {
-    	return $paginate ? $query->paginate($paginate) : $query->get();
+    	return $this->paginateIf($query>get(), $paginate);
+    }
+
+    private function paginateIf($records, $per_page)
+    {
+
+        if ($per_page>0) {
+            // We can bypass and continue...
+        } elseif ($this->request->input('limit') > 0){
+            // $per_page=null, but we could try find "limit" form request
+            $per_page = $this->request->input('limit');
+        } else {
+            return $records;
+        }
+
+        $page   = $this->request->input('page') > 0 ? $this->request->input('page') : 1;
+        $offset = ($page * $per_page) - $per_page;
+
+        return new LengthAwarePaginator(
+            array_slice($records->toArray(), $offset, $per_page, true),
+            $records->count(),
+            $per_page,
+            $page,
+            ['path' => $this->request->url(), 'query' => $this->request->query()]
+        );
+
     }
 }
