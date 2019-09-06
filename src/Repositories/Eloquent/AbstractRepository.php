@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Kurt\Repoist\Exceptions\NoEntityDefined;
 use Kurt\Repoist\Repositories\Contracts\RepositoryInterface;
 use Kurt\Repoist\Repositories\Criteria\CriteriaInterface;
-use use Illuminate\Support\Arr;
+use Illuminate\Support\Arr;
 
 abstract class AbstractRepository implements RepositoryInterface, CriteriaInterface
 {
