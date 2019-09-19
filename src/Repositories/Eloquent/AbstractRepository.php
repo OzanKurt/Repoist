@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Kurt\Repoist\Exceptions\NoEntityDefined;
 use Kurt\Repoist\Repositories\Contracts\RepositoryInterface;
 use Kurt\Repoist\Repositories\Criteria\CriteriaInterface;
+use Illuminate\Support\Arr;
 
 abstract class AbstractRepository implements RepositoryInterface, CriteriaInterface
 {
@@ -136,7 +137,7 @@ abstract class AbstractRepository implements RepositoryInterface, CriteriaInterf
      */
     public function withCriteria(...$criteria)
     {
-        $criteria = array_flatten($criteria);
+        $criteria = Arr::flatten($criteria);
 
         foreach ($criteria as $criterion) {
             $this->entity = $criterion->apply($this->entity);
