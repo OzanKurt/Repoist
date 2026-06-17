@@ -81,7 +81,7 @@ abstract class AbstractRepository implements RepositoryInterface, CriteriaInterf
      */
     public function findWhereLike($columns, $value, $paginate = null)
     {
-    	$query = $this->entity;
+    	$query = $this->entity->query();
 
         if (is_string($columns)) {
         	$columns = [$columns];
