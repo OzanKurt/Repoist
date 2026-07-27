@@ -10,7 +10,10 @@ All notable changes to `ozankurt/repoist` are documented here. This project adhe
 - Automatic binding of `App\Repositories\Contracts\XRepository` contracts to their `EloquentXRepository` implementations (toggle with the `auto_bind` config key).
 - New repository methods: `findMany`, `firstOrCreate`, `updateOrCreate`, `count`, `exists`, `pluck` and `chunk`.
 - New built-in criteria: `OrderBy`, `Latest`, `WhereIn`, `Search` and `WithTrashed`.
+- `Cacheable` trait that caches reads and flushes them on writes (taggable stores get full invalidation).
+- Overridable write hooks `afterCreate`, `afterUpdate` and `afterDelete` on `AbstractRepository`.
 - Publishable stubs via `vendor:publish --tag=repoist-stubs`; the generators prefer a published stub over the packaged one.
+- `--all` option for `make:repository` to also scaffold the model with a migration and factory.
 - `--force` option for `make:repository` and `make:criterion` to overwrite without prompting.
 - Nested name support, e.g. `make:repository Blog/Post` and `make:criterion Blog/Published`.
 - Configurable `models` namespace/path so generated repositories reference `App\Models\*`.

@@ -10,6 +10,7 @@ final class MakeRepositoryCommand extends RepoistCommand
      * @var string
      */
     protected $signature = 'make:repository {model : The model name (relative to the models namespace, e.g. Task or Blog/Post)}
+                            {--all : Also generate the model with a migration and factory}
                             {--force : Overwrite existing files without asking}';
 
     /**
@@ -49,6 +50,16 @@ final class MakeRepositoryCommand extends RepoistCommand
         $this->model = $this->appNamespace().$this->config('namespaces.models').'\\'.$input;
 
         if ($this->isLumen() || class_exists($this->model)) {
+            return;
+        }
+
+        if ($this->option('all')) {
+            $this->call('make:model', [
+                'name' => str_replace('\\', '/', $input),
+                '--migration' => true,
+                '--factory' => true,
+            ]);
+
             return;
         }
 

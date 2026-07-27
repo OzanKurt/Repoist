@@ -102,7 +102,11 @@ abstract class AbstractRepository implements CriteriaInterface, RepositoryInterf
      */
     public function create(array $properties): Model
     {
-        return $this->model->newQuery()->create($properties);
+        $model = $this->model->newQuery()->create($properties);
+
+        $this->afterCreate($model);
+
+        return $model;
     }
 
     /**
@@ -128,12 +132,28 @@ abstract class AbstractRepository implements CriteriaInterface, RepositoryInterf
      */
     public function update(int|string $id, array $properties): bool
     {
-        return (bool) $this->find($id)->update($properties);
+        $model = $this->find($id);
+
+        $updated = (bool) $model->update($properties);
+
+        if ($updated) {
+            $this->afterUpdate($model);
+        }
+
+        return $updated;
     }
 
     public function delete(int|string $id): bool
     {
-        return (bool) $this->find($id)->delete();
+        $model = $this->find($id);
+
+        $deleted = (bool) $model->delete();
+
+        if ($deleted) {
+            $this->afterDelete($model);
+        }
+
+        return $deleted;
     }
 
     public function count(): int
@@ -215,4 +235,19 @@ abstract class AbstractRepository implements CriteriaInterface, RepositoryInterf
     {
         return $paginate ? $query->paginate($paginate) : $query->get();
     }
+
+    /**
+     * Called after a record is created. Override to hook in side effects.
+     */
+    protected function afterCreate(Model $model): void {}
+
+    /**
+     * Called after a record is updated. Override to hook in side effects.
+     */
+    protected function afterUpdate(Model $model): void {}
+
+    /**
+     * Called after a record is deleted. Override to hook in side effects.
+     */
+    protected function afterDelete(Model $model): void {}
 }

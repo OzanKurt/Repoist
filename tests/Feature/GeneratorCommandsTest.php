@@ -6,6 +6,13 @@ use Illuminate\Support\Facades\File;
 
 afterEach(function (): void {
     File::deleteDirectory(app_path('Repositories'));
+
+    // Artifacts produced by the --all scaffold.
+    File::delete(app_path('Models/Widget.php'));
+    File::delete(database_path('factories/WidgetFactory.php'));
+    foreach (File::glob(database_path('migrations/*_create_widgets_table.php')) as $migration) {
+        File::delete($migration);
+    }
 });
 
 it('generates a repository contract and its eloquent implementation', function (): void {
@@ -40,6 +47,19 @@ it('supports nested model names', function (): void {
     $repository = File::get($repositoryPath);
     expect($repository)->toContain('use App\Models\Blog\Post;')
         ->and($repository)->toContain('return Post::class;');
+});
+
+it('scaffolds the model, migration and factory with --all', function (): void {
+    $this->artisan('make:repository', ['model' => 'Widget', '--all' => true])
+        ->assertSuccessful();
+
+    $migrations = File::glob(database_path('migrations/*_create_widgets_table.php'));
+
+    expect(File::exists(app_path('Models/Widget.php')))->toBeTrue()
+        ->and(File::exists(app_path('Repositories/Contracts/WidgetRepository.php')))->toBeTrue()
+        ->and(File::exists(app_path('Repositories/Eloquent/EloquentWidgetRepository.php')))->toBeTrue()
+        ->and(File::exists(database_path('factories/WidgetFactory.php')))->toBeTrue()
+        ->and($migrations)->not->toBeEmpty();
 });
 
 it('generates a criterion', function (): void {

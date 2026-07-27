@@ -44,7 +44,11 @@ Nested names are supported and resolve against your `App\Models` namespace:
 php artisan make:repository Blog/Post
 ```
 
-Pass `--force` to overwrite existing files without prompting.
+Pass `--all` to also scaffold the model with a migration and factory, and `--force` to overwrite existing files without prompting.
+
+```bash
+php artisan make:repository Task --all
+```
 
 ### Binding contracts to implementations
 
@@ -105,6 +109,41 @@ class RepositoryServiceProvider extends ServiceProvider
 `find` and `findWhereFirst` throw `Illuminate\Database\Eloquent\ModelNotFoundException` when no record matches.
 
 Each call runs against a fresh query, so a repository instance is safe to reuse (including when bound as a singleton): one call never leaks its `where` clauses or criteria into the next.
+
+## Write hooks
+
+Override the protected hooks on `AbstractRepository` to run side effects after a write, for example logging, dispatching events, or flushing your own caches:
+
+```php
+use Illuminate\Database\Eloquent\Model;
+
+protected function afterCreate(Model $model): void {}
+protected function afterUpdate(Model $model): void {}
+protected function afterDelete(Model $model): void {}
+```
+
+## Caching
+
+`use` the `Cacheable` trait in a repository to cache reads and flush them automatically on writes:
+
+```php
+use Kurt\Repoist\Repositories\Eloquent\AbstractRepository;
+use Kurt\Repoist\Repositories\Eloquent\Concerns\Cacheable;
+
+class EloquentTaskRepository extends AbstractRepository implements TaskRepository
+{
+    use Cacheable;
+
+    protected int $cacheTtl = 3600; // seconds; override to taste
+
+    public function entity(): string
+    {
+        return Task::class;
+    }
+}
+```
+
+`all()` and `find()` are cached (paginated results and any call with queued criteria are not), and `create()`, `update()` and `delete()` flush the cache. Use a taggable cache store (`array`, `redis`, `memcached`) for complete invalidation; on non-taggable stores only the `all` key is forgotten on write. Call `flushCache()` to clear it manually.
 
 ## Criteria
 

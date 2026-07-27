@@ -6,3 +6,7 @@ parameters:
     paths:
         - src
     tmpDir: build/phpstan
+    ignoreErrors:
+        # The Cacheable trait is consumed by downstream applications, so
+        # PHPStan's "trait used zero times" check would otherwise flag it.
+        - identifier: trait.unused
