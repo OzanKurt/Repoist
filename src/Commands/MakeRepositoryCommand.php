@@ -1,187 +1,106 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Kurt\Repoist\Commands;
 
-use Illuminate\Support\Facades\Artisan;
-
-class MakeRepositoryCommand extends RepoistCommand
+final class MakeRepositoryCommand extends RepoistCommand
 {
     /**
-     * The name and signature of the console command.
-     *
      * @var string
      */
-    protected $signature = 'make:repository {model}';
+    protected $signature = 'make:repository {model : The model name (relative to the models namespace, e.g. Task or Blog/Post)}
+                            {--force : Overwrite existing files without asking}';
 
     /**
-     * The console command description.
-     *
      * @var string
      */
-    protected $description = 'Create a new repository';
+    protected $description = 'Create a repository contract and its Eloquent implementation for a model';
 
     /**
-     * Stub paths.
-     *
-     * @var array
+     * Fully qualified model class (e.g. App\Models\Task).
      */
-    protected $stubs = [
-        'contract'   => __DIR__.'/../stubs/Contracts/ExampleRepository.php',
-        'repository' => __DIR__.'/../stubs/Eloquent/EloquentExampleRepository.php',
-    ];
+    protected string $model;
 
     /**
-     * Model with full namespace.
-     *
-     * @var string
+     * Short model class name (e.g. Task).
      */
-    protected $model;
+    protected string $modelName;
 
-    /**
-     * Model class name.
-     *
-     * @var string
-     */
-    protected $modelName;
-
-    /**
-     * Create a new command instance.
-     *
-     * @return void
-     */
-    public function __construct()
+    public function handle(): int
     {
-        parent::__construct();
-    }
+        $this->resolveModel();
 
-    /**
-     * Execute the console command.
-     *
-     * @return mixed
-     */
-    public function handle()
-    {
-
-        $this->checkModel();
-
-
-        list($contract, $contractName) = $this->createContract();
+        [$contract, $contractName] = $this->createContract();
 
         $this->createRepository($contract, $contractName);
+
+        return self::SUCCESS;
     }
 
     /**
-     * Create a new contract
+     * Resolve the model FQCN, offering to create it when it is missing.
      */
-    protected function createContract()
+    protected function resolveModel(): void
     {
-        $content = $this->fileManager->get($this->stubs['contract']);
+        $input = trim(str_replace('/', '\\', $this->stringArgument('model')), '\\');
 
-        $replacements = [
-            '%namespaces.contracts%' => $this->appNamespace.$this->config('namespaces.contracts'),
-            '%modelName%'            => $this->modelName,
-        ];
+        $this->modelName = class_basename($input);
+        $this->model = $this->appNamespace().$this->config('namespaces.models').'\\'.$input;
 
-        $content = str_replace(array_keys($replacements), array_values($replacements), $content);
-
-        $fileName      = $this->modelName.'Repository';
-        $fileDirectory = app()->basePath().'/app/'.$this->config('paths.contracts');
-        $filePath      = $fileDirectory.$fileName.'.php';
-
-        if (!$this->fileManager->exists($fileDirectory)) {
-            $this->fileManager->makeDirectory($fileDirectory, 0755, true);
+        if ($this->isLumen() || class_exists($this->model)) {
+            return;
         }
 
-        if ($this->laravel->runningInConsole() && $this->fileManager->exists($filePath)) {
-            $response = $this->ask("The contract [{$fileName}] already exists. Do you want to overwrite it?", 'Yes');
-
-            if (!$this->isResponsePositive($response)) {
-                $this->line("The contract [{$fileName}] will not be overwritten.");
-                return;
-            }
-
-            $this->fileManager->put($filePath, $content);
-        } else {
-            $this->fileManager->put($filePath, $content);
+        if ($this->option('force') || $this->confirm("Model [{$this->model}] does not exist. Create it?", true)) {
+            $this->call('make:model', ['name' => str_replace('\\', '/', $input)]);
         }
-
-        $this->line("The contract [{$fileName}] has been created.");
-
-        return [$this->config('namespaces.contracts').'\\'.$fileName, $fileName];
     }
 
     /**
-     * Create a new repository
+     * Create the repository contract (interface).
+     *
+     * @return array{0: string, 1: string}
      */
-    protected function createRepository($contract, $contractName)
+    protected function createContract(): array
     {
-        $content = $this->fileManager->get($this->stubs['repository']);
+        $namespace = $this->appNamespace().$this->config('namespaces.contracts');
+        $name = $this->modelName.'Repository';
 
-        $replacements = [
-            '%contract%'                => $this->appNamespace.$contract,
-            '%contractName%'            => $contractName,
-            '%model%'                   => $this->model,
-            '%modelName%'               => $this->modelName,
-            '%namespaces.repositories%' => $this->appNamespace.$this->config('namespaces.repositories'),
-        ];
+        $content = $this->fill($this->getStub('Contracts/ExampleRepository.stub'), [
+            '{{ namespace }}' => $namespace,
+            '{{ modelName }}' => $this->modelName,
+        ]);
 
-        $content = str_replace(array_keys($replacements), array_values($replacements), $content);
+        $this->writeFile(
+            $this->appPath($this->config('paths.contracts').'/'.$name.'.php'),
+            $content,
+            'contract'
+        );
 
-        $fileName      = 'Eloquent'.$this->modelName.'Repository';
-        $fileDirectory = app()->basePath().'/app/'.$this->config('paths.repositories');
-        $filePath      = $fileDirectory.$fileName.'.php';
-
-        // Check if the directory exists, if not create...
-        if (!$this->fileManager->exists($fileDirectory)) {
-            $this->fileManager->makeDirectory($fileDirectory, 0755, true);
-        }
-
-        if ($this->laravel->runningInConsole() && $this->fileManager->exists($filePath)) {
-            $response = $this->ask("The repository [{$fileName}] already exists. Do you want to overwrite it?", 'Yes');
-
-            if (!$this->isResponsePositive($response)) {
-                $this->line("The repository [{$fileName}] will not be overwritten.");
-                return;
-            }
-        }
-
-        $this->line("The repository [{$fileName}] has been created.");
-
-        $this->fileManager->put($filePath, $content);
+        return [$namespace.'\\'.$name, $name];
     }
 
     /**
-     * Check the models existance, create if wanted.
+     * Create the Eloquent repository implementation.
      */
-    protected function checkModel()
+    protected function createRepository(string $contract, string $contractName): void
     {
-        $model = $this->appNamespace.$this->argument('model');
+        $namespace = $this->appNamespace().$this->config('namespaces.repositories');
+        $name = 'Eloquent'.$this->modelName.'Repository';
 
-        $this->model = str_replace('/', '\\', $model);
+        $content = $this->fill($this->getStub('Eloquent/EloquentExampleRepository.stub'), [
+            '{{ namespace }}' => $namespace,
+            '{{ contract }}' => $contract,
+            '{{ contractName }}' => $contractName,
+            '{{ model }}' => $this->model,
+            '{{ modelName }}' => $this->modelName,
+        ]);
 
-        if (!$this->isLumen() && $this->laravel->runningInConsole()) {
-            if (!class_exists($this->model)) {
-                $response = $this->ask("Model [{$this->model}] does not exist. Would you like to create it?", 'Yes');
-
-                if ($this->isResponsePositive($response)) {
-                    Artisan::call('make:model', [
-                        'name' => $this->model,
-                    ]);
-
-                    $this->line("Model [{$this->model}] has been successfully created.");
-                } else {
-                    $this->line("Model [{$this->model}] is not being created.");
-                }
-            }
-        }
-
-        $modelParts = explode('\\', $this->model);
-
-        $this->modelName = array_pop($modelParts);
-    }
-
-    protected function isLumen()
-    {
-        return str_contains(app()->version(), 'Lumen');
+        $this->writeFile(
+            $this->appPath($this->config('paths.repositories').'/'.$name.'.php'),
+            $content,
+            'repository'
+        );
     }
 }

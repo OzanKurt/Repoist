@@ -1,34 +1,26 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Kurt\Repoist\Repositories\Eloquent\Criteria;
 
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Kurt\Repoist\Repositories\Criteria\CriterionInterface;
 
-class ByUser implements CriterionInterface
+final class ByUser implements CriterionInterface
 {
-    /**
-     * User id.
-     *
-     * @var integer
-     */
-    protected $userId;
+    public function __construct(
+        protected int|string $userId,
+        protected string $column = 'user_id',
+    ) {}
 
     /**
-     * @param $userId
+     * @param  Builder<Model>  $query
+     * @return Builder<Model>
      */
-    public function __construct($userId)
+    public function apply(Builder $query): Builder
     {
-        $this->userId = $userId;
-    }
-
-    /**
-     * Apply the query filtering.
-     *
-     * @param  \Illuminate\Database\Eloquent\Builder $entity
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
-    public function apply($entity)
-    {
-        return $entity->where('user_id', $this->userId);
+        return $query->where($this->column, $this->userId);
     }
 }

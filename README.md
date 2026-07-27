@@ -1,175 +1,220 @@
 # Repoist
 
-Laravel repository generator for 5.2+ versions
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/ozankurt/repoist.svg)](https://packagist.org/packages/ozankurt/repoist)
+[![Tests](https://github.com/OzanKurt/Repoist/actions/workflows/tests.yml/badge.svg)](https://github.com/OzanKurt/Repoist/actions/workflows/tests.yml)
+[![Total Downloads](https://img.shields.io/packagist/dt/ozankurt/repoist.svg)](https://packagist.org/packages/ozankurt/repoist)
+[![License](https://img.shields.io/packagist/l/ozankurt/repoist.svg)](LICENSE)
 
-## Usage
+Repoist scaffolds the repository pattern for Laravel. It generates repository contracts, their Eloquent implementations and reusable query criteria, and ships a fully typed `AbstractRepository` base class with the CRUD methods you reach for every day.
 
-### Step 1: Install Through Composer
+## Requirements
 
-```
+- PHP 8.3+
+- Laravel 12
+
+> Using an older stack? Repoist `^1.0` supports Laravel 5.2 to 6. This `^2.0` line targets Laravel 12.
+
+## Installation
+
+```bash
 composer require ozankurt/repoist
 ```
 
-### Step 2: Publish and edit the configurations
+The service provider is registered automatically through package discovery. Publish the config file if you want to change the default namespaces, paths, or auto-binding:
 
-**In Laravel:** Run `php artisan vendor:publish --tag=repoist-config` from the console to configure the Repoist according to your needs.
-
-### Step 3: Run Artisan!
-
-You're all set. Run `php artisan` from the console, and you'll see the new commands.
-
-### For Lumen
-
-In `bootstrap\app.php` enable Facades and Eloquent, also enable the configuration file.
-
-```
-$app->withFacades();
-$app->withEloquent();
-
-$app->configure('repoist');
+```bash
+php artisan vendor:publish --tag=repoist-config
 ```
 
-In the Register service providers section add:
+## Generating a repository
 
-```
-$app->register(Kurt\Repoist\RepoistServiceProvider::class);
-```
-
-## Examples
-
-- [Repository](#repository)
-- [Criterion](#criterion)
-
-### Repository
-
-```
+```bash
 php artisan make:repository Task
 ```
 
-Will output:
+This creates:
 
-- `app/Contracts/Task/TaskRepository.php` (contract)
-- `app/Repositories/Eloquent/EloquentTaskRepository.php`
-- `app/Task.php` (if needed)
+- `app/Repositories/Contracts/TaskRepository.php`, the contract (extends `RepositoryInterface`)
+- `app/Repositories/Eloquent/EloquentTaskRepository.php`, the Eloquent implementation
+- `app/Models/Task.php`, the model, if it does not exist yet (you are asked first)
 
-### Criterion
+Nested names are supported and resolve against your `App\Models` namespace:
 
+```bash
+php artisan make:repository Blog/Post
 ```
+
+Pass `--force` to overwrite existing files without prompting.
+
+### Binding contracts to implementations
+
+Repoist binds every `App\Repositories\Contracts\XRepository` contract to its `App\Repositories\Eloquent\EloquentXRepository` implementation automatically, so you can type-hint the contract with zero configuration:
+
+```php
+use App\Repositories\Contracts\TaskRepository;
+
+class TaskController extends Controller
+{
+    public function __construct(private readonly TaskRepository $tasks) {}
+
+    public function index()
+    {
+        return $this->tasks->all();
+    }
+}
+```
+
+Any binding you register yourself always takes precedence. To turn auto-binding off, publish the config and set `'auto_bind' => false`, then bind manually, for example in a dedicated `RepositoryServiceProvider`:
+
+```php
+namespace App\Providers;
+
+use App\Repositories\Contracts\TaskRepository;
+use App\Repositories\Eloquent\EloquentTaskRepository;
+use Illuminate\Support\ServiceProvider;
+
+class RepositoryServiceProvider extends ServiceProvider
+{
+    public array $bindings = [
+        TaskRepository::class => EloquentTaskRepository::class,
+    ];
+}
+```
+
+## Available repository methods
+
+| Method | Usage | Returns |
+| --- | --- | --- |
+| `all` | `$repo->all($paginate = null)` | `Collection` or `LengthAwarePaginator` |
+| `find` | `$repo->find($id)` | `Model` (throws if missing) |
+| `findMany` | `$repo->findMany(array $ids)` | `Collection` |
+| `findWhere` | `$repo->findWhere($column, $value, $paginate = null)` | `Collection` or `LengthAwarePaginator` |
+| `findWhereFirst` | `$repo->findWhereFirst($column, $value)` | `Model` (throws if missing) |
+| `findWhereLike` | `$repo->findWhereLike($columns, $value, $paginate = null)` | `Collection` or `LengthAwarePaginator` |
+| `paginate` | `$repo->paginate($perPage = 10)` | `LengthAwarePaginator` |
+| `create` | `$repo->create(array $properties)` | `Model` |
+| `firstOrCreate` | `$repo->firstOrCreate(array $attributes, array $values = [])` | `Model` |
+| `updateOrCreate` | `$repo->updateOrCreate(array $attributes, array $values = [])` | `Model` |
+| `update` | `$repo->update($id, array $properties)` | `bool` |
+| `delete` | `$repo->delete($id)` | `bool` |
+| `count` | `$repo->count()` | `int` |
+| `exists` | `$repo->exists()` | `bool` |
+| `pluck` | `$repo->pluck($column, $key = null)` | `Illuminate\Support\Collection` |
+| `chunk` | `$repo->chunk($count, $callback)` | `bool` |
+
+`find` and `findWhereFirst` throw `Illuminate\Database\Eloquent\ModelNotFoundException` when no record matches.
+
+Each call runs against a fresh query, so a repository instance is safe to reuse (including when bound as a singleton): one call never leaks its `where` clauses or criteria into the next.
+
+## Criteria
+
+Criteria are small, reusable classes that shape a repository's query. Apply them with `withCriteria()`:
+
+```php
+use App\Repositories\Contracts\CustomerRepository;
+use Kurt\Repoist\Repositories\Eloquent\Criteria\ByUser;
+use Kurt\Repoist\Repositories\Eloquent\Criteria\EagerLoad;
+
+$customers = $this->customers
+    ->withCriteria([
+        new ByUser($request->user()->id),
+        new EagerLoad(['tickets']),
+    ])
+    ->all();
+```
+
+`withCriteria()` accepts either a variadic list or an array of criteria. Queued criteria apply to the next terminal call only, then reset.
+
+### Built-in criteria
+
+- `ByUser($userId, $column = 'user_id')`, constrain records to a user.
+- `EagerLoad($relations)`, eager load one relation (string) or many (array).
+- `OrderBy($column, $direction = 'asc')`, order the results.
+- `Latest($column = 'created_at')`, order newest first.
+- `WhereIn($column, array $values)`, constrain a column to a set of values.
+- `Search($columns, $term)`, `LIKE` search across one or more columns.
+- `WithTrashed()`, include soft-deleted records.
+
+### Generating a criterion
+
+```bash
 php artisan make:criterion Completed
 ```
 
-Will output:
-
-- `app/Repositories/Eloquent/Criteria/Completed.php`
-
-## Configurations
-
-If somehow you cannot publish the `config/repoist.php` from artisan here you can copy and use it.
+Creates `app/Repositories/Eloquent/Criteria/Completed.php`:
 
 ```php
-<?php
+namespace App\Repositories\Eloquent\Criteria;
 
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Kurt\Repoist\Repositories\Criteria\CriterionInterface;
+
+class Completed implements CriterionInterface
+{
+    public function __construct(protected mixed $value = null) {}
+
+    /**
+     * @param  Builder<Model>  $query
+     * @return Builder<Model>
+     */
+    public function apply(Builder $query): Builder
+    {
+        return $query->where('field', $this->value);
+    }
+}
+```
+
+Nested criteria (`make:criterion Blog/Published`) are supported too.
+
+## Configuration
+
+The published `config/repoist.php` controls the namespaces and paths used by the generators, plus auto-binding:
+
+```php
 return [
+    'namespaces' => [
+        'models'       => 'Models',
+        'contracts'    => 'Repositories\Contracts',
+        'repositories' => 'Repositories\Eloquent',
+    ],
 
-	/**
-	 * Namespaces are being prefixed with the applications base namespace.
-	 */
-	'namespaces' => [
-	    'contracts' => 'Repositories\Contracts',
-	    'repositories' => 'Repositories\Eloquent',
-	],
+    'paths' => [
+        'models'       => 'Models',
+        'contracts'    => 'Repositories/Contracts',
+        'repositories' => 'Repositories/Eloquent',
+    ],
 
-	/**
-	 * Paths will be used with the `app()->basePath().'/app/'` function to reach app directory.
-	 */
-	'paths' => [
-	    'contracts' => 'Repositories/Contracts/',
-	    'repositories' => 'Repositories/Eloquent/',
-	],
-
+    'auto_bind' => true,
 ];
 ```
 
-## Configurations
+## Customizing the generated code
 
-Default methods of the `Kurt\Repoist\Repositories\Eloquent\AbstractRepository`.
+Publish the stubs to tailor what the generators produce:
 
-| Method                | Usage
-| --------------------- | ----------------------------------------------------------
-| **all**               | $repo->all()
-| **find**            	| $repo->find($id);
-| **findWhere**         | $repo->findWhere($column, $value);
-| **findWhereFirst**    | $repo->findWhereFirst($column, $value);
-| **findWhereLike**     | $repo->findWhereLike($column, $value, $paginate = 0);
-| **paginate**          | $repo->paginate($perPage = 10);
-| **create**            | $repo->create(array $properties);
-| **update**            | $repo->update($id, array $properties);
-| **delete**            | $repo->delete($id);
-
-## Example Usage
-
-Customer.php
-```php
-<?php
-namespace App\Models;
-
-use Illuminate\Database\Eloquent\Model;
-
-class Customer extends Model
-{
-    /**
-     * Customer has many Tickets.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function tickets()
-    {
-    	return $this->hasMany(Ticket::class, 'customer_id', 'id');
-    }
-}
+```bash
+php artisan vendor:publish --tag=repoist-stubs
 ```
-EloquentCustomerRepository.php
-```php
-<?php
-namespace App\Repositories\Eloquent;
 
-use App\Models\Customer;
-use App\Repositories\Contracts\CustomerRepository;
-use Kurt\Repoist\Repositories\Eloquent\AbstractRepository;
+The stubs land in `stubs/repoist`. Repoist prefers a published stub when present and falls back to the packaged one.
 
-class EloquentCustomerRepository extends AbstractRepository implements CustomerRepository
-{
-    public function entity()
-    {
-        return Customer::class;
-    }
-}
+## Testing
+
+```bash
+composer test        # Pest
+composer lint        # Pint (dry run)
+composer stan        # PHPStan / Larastan (level 8)
 ```
-PagesController.php
-```php
-<?php
-namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Repositories\Contracts\CustomerRepository;
-use Kurt\Repoist\Repositories\Eloquent\Criteria\EagerLoad;
+## Changelog
 
-class PagesController extends Controller
-{
-	private $customerRepository;
+See [CHANGELOG.md](CHANGELOG.md). Upgrading from `1.x`? Read [UPGRADE-2.0.md](UPGRADE-2.0.md).
 
-	function __construct(CustomerRepository $customerRepository)
-	{
-		$this->customerRepository = $customerRepository;
-	}
+## Security
 
-    public function getHome()
-    {
-        $customersWithTickets = $this->customerRepository->withCriteria([
-        	new EagerLoad(['tickets']),
-        ])->all();
+Please review [our security policy](SECURITY.md) for reporting vulnerabilities.
 
-        return $customersWithTickets;
-    }
-}
-```
+## License
+
+Repoist is open-sourced software licensed under the [MIT license](LICENSE).

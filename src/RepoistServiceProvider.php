@@ -1,53 +1,40 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Kurt\Repoist;
 
-use Illuminate\Support\ServiceProvider;
+use Illuminate\Filesystem\Filesystem;
 use Kurt\Repoist\Commands\MakeCriterionCommand;
 use Kurt\Repoist\Commands\MakeRepositoryCommand;
+use Kurt\Repoist\Support\RepositoryBinder;
+use Spatie\LaravelPackageTools\Package;
+use Spatie\LaravelPackageTools\PackageServiceProvider;
 
-class RepoistServiceProvider extends ServiceProvider
+final class RepoistServiceProvider extends PackageServiceProvider
 {
-    /**
-     * Commands to be registered.
-     * @var array
-     */
-    private $repoistCommands = [
-        MakeCriterionCommand::class,
-        MakeRepositoryCommand::class,
-    ];
-
-    /**
-     * Bootstrap the application services.
-     *
-     * @return void
-     */
-    public function boot()
+    public function configurePackage(Package $package): void
     {
-        //
+        $package
+            ->name('repoist')
+            ->hasConfigFile('repoist')
+            ->hasCommands([
+                MakeRepositoryCommand::class,
+                MakeCriterionCommand::class,
+            ]);
     }
 
-    /**
-     * Register the application services.
-     *
-     * @return void
-     */
-    public function register()
+    public function packageRegistered(): void
     {
-    	$this->mergeConfigFrom(__DIR__.'/config/repoist.php', 'repoist');
-
-    	$this->publishes([
-	        __DIR__.'/config/repoist.php' => app()->basePath() . '/config/repoist.php'
-	    ], 'repoist-config');
-
-        $this->registerCommands();
+        if (config('repoist.auto_bind', true)) {
+            (new RepositoryBinder($this->app, $this->app->make(Filesystem::class)))->bind();
+        }
     }
 
-    /**
-     * Registers repoist commands.
-     */
-    public function registerCommands()
+    public function packageBooted(): void
     {
-    	$this->commands($this->repoistCommands);
+        $this->publishes([
+            __DIR__.'/stubs' => base_path('stubs/repoist'),
+        ], 'repoist-stubs');
     }
 }

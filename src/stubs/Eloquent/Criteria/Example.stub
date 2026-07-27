@@ -1,0 +1,25 @@
+<?php
+
+namespace {{ namespace }};
+
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Kurt\Repoist\Repositories\Criteria\CriterionInterface;
+
+class {{ criterion }} implements CriterionInterface
+{
+    public function __construct(protected mixed $value = null)
+    {
+    }
+
+    /**
+     * Apply the criterion to the query.
+     *
+     * @param  Builder<Model>  $query
+     * @return Builder<Model>
+     */
+    public function apply(Builder $query): Builder
+    {
+        return $query->where('field', $this->value);
+    }
+}

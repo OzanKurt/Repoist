@@ -1,2 +1,7 @@
-vendor
+/vendor
+/build
+composer.lock
+.phpunit.result.cache
+.phpunit.cache
 .idea
+.phpstorm.meta.php

@@ -1,34 +1,34 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Kurt\Repoist\Repositories\Eloquent\Criteria;
 
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Kurt\Repoist\Repositories\Criteria\CriterionInterface;
 
-class EagerLoad implements CriterionInterface
+final class EagerLoad implements CriterionInterface
 {
     /**
-     * Relations to eagerload.
-     *
-     * @var array
+     * @var array<int, string>
      */
-    protected $relations;
+    protected array $relations;
 
     /**
-     * @param array $relations
+     * @param  array<int, string>|string  $relations
      */
-    public function __construct(array $relations)
+    public function __construct(array|string $relations)
     {
-        $this->relations = $relations;
+        $this->relations = (array) $relations;
     }
 
     /**
-     * Apply the query filtering.
-     *
-     * @param  \Illuminate\Database\Eloquent\Builder $entity
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @param  Builder<Model>  $query
+     * @return Builder<Model>
      */
-    public function apply($entity)
+    public function apply(Builder $query): Builder
     {
-        return $entity->with($this->relations);
+        return $query->with($this->relations);
     }
 }

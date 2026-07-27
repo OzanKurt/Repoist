@@ -1,162 +1,218 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Kurt\Repoist\Repositories\Eloquent;
 
-use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Kurt\Repoist\Exceptions\NoEntityDefined;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Collection as BaseCollection;
 use Kurt\Repoist\Repositories\Contracts\RepositoryInterface;
 use Kurt\Repoist\Repositories\Criteria\CriteriaInterface;
-use Illuminate\Support\Arr;
+use Kurt\Repoist\Repositories\Criteria\CriterionInterface;
 
-abstract class AbstractRepository implements RepositoryInterface, CriteriaInterface
+abstract class AbstractRepository implements CriteriaInterface, RepositoryInterface
 {
+    protected Model $model;
+
     /**
-     * @var mixed
+     * Criteria queued for the next terminal operation.
+     *
+     * @var list<CriterionInterface>
      */
-    protected $entity;
+    protected array $criteria = [];
 
     public function __construct()
     {
-        $this->entity = $this->resolveEntity();
+        $this->model = $this->resolveModel();
     }
 
     /**
-     * @return mixed
+     * The fully qualified model class the repository wraps.
+     *
+     * @return class-string<Model>
      */
-    public function all($paginate = null)
+    abstract public function entity(): string;
+
+    /**
+     * @return Collection<int, Model>|LengthAwarePaginator<int, Model>
+     */
+    public function all(?int $paginate = null): Collection|LengthAwarePaginator
     {
-        return $this->processPagination($this->entity, $paginate);
+        return $this->paginateOrGet($this->newQuery(), $paginate);
+    }
+
+    public function find(int|string $id): Model
+    {
+        return $this->newQuery()->findOrFail($id);
     }
 
     /**
-     * @param $id
-     * @return mixed
+     * @param  array<int, int|string>  $ids
+     * @return Collection<int, Model>
      */
-    public function find($id)
+    public function findMany(array $ids): Collection
     {
-        $model = $this->entity->find($id);
-
-        if (!$model) {
-            throw (new ModelNotFoundException)->setModel(
-                get_class($this->entity->getModel()),
-                $id
-            );
-        }
-
-        return $model;
+        return $this->newQuery()->findMany($ids);
     }
 
     /**
-     * @param $column
-     * @param $value
-     * @return mixed
+     * @return Collection<int, Model>|LengthAwarePaginator<int, Model>
      */
-    public function findWhere($column, $value, $paginate = null)
+    public function findWhere(string $column, mixed $value, ?int $paginate = null): Collection|LengthAwarePaginator
     {
-    	$query = $this->entity->where($column, $value);
+        return $this->paginateOrGet($this->newQuery()->where($column, $value), $paginate);
+    }
 
-        return $this->processPagination($query, $paginate);
+    public function findWhereFirst(string $column, mixed $value): Model
+    {
+        return $this->newQuery()->where($column, $value)->firstOrFail();
     }
 
     /**
-     * @param $column
-     * @param $value
-     * @return mixed
+     * @param  array<int, string>|string  $columns
+     * @return Collection<int, Model>|LengthAwarePaginator<int, Model>
      */
-    public function findWhereFirst($column, $value)
+    public function findWhereLike(array|string $columns, string $value, ?int $paginate = null): Collection|LengthAwarePaginator
     {
-        $model = $this->entity->where($column, $value)->first();
+        $columns = (array) $columns;
 
-        if (!$model) {
-            throw (new ModelNotFoundException)->setModel(
-                get_class($this->entity->getModel())
-            );
-        }
+        $query = $this->newQuery()->where(function (Builder $query) use ($columns, $value): void {
+            foreach ($columns as $column) {
+                $query->orWhere($column, 'like', $value);
+            }
+        });
 
-        return $model;
+        return $this->paginateOrGet($query, $paginate);
     }
 
     /**
-     * {@inheritdoc}
+     * @return LengthAwarePaginator<int, Model>
      */
-    public function findWhereLike($columns, $value, $paginate = null)
+    public function paginate(int $perPage = 10): LengthAwarePaginator
     {
-    	$query = $this->entity;
-
-        if (is_string($columns)) {
-        	$columns = [$columns];
-        }
-
-		foreach ($columns as $column) {
-	        $query->orWhere($column, 'like', $value);
-		}
-
-		return $this->processPagination($query, $paginate);
+        return $this->newQuery()->paginate($perPage);
     }
 
     /**
-     * @param $perPage
-     * @return mixed
+     * @param  array<string, mixed>  $properties
      */
-    public function paginate($perPage = 10)
+    public function create(array $properties): Model
     {
-        return $this->entity->paginate($perPage);
+        return $this->model->newQuery()->create($properties);
     }
 
     /**
-     * @param array $properties
-     * @return mixed
+     * @param  array<string, mixed>  $attributes
+     * @param  array<string, mixed>  $values
      */
-    public function create(array $properties)
+    public function firstOrCreate(array $attributes, array $values = []): Model
     {
-        return $this->entity->create($properties);
+        return $this->model->newQuery()->firstOrCreate($attributes, $values);
     }
 
     /**
-     * @param $id
-     * @param array $properties
-     * @return mixed
+     * @param  array<string, mixed>  $attributes
+     * @param  array<string, mixed>  $values
      */
-    public function update($id, array $properties)
+    public function updateOrCreate(array $attributes, array $values = []): Model
     {
-        return $this->find($id)->update($properties);
+        return $this->model->newQuery()->updateOrCreate($attributes, $values);
     }
 
     /**
-     * @param $id
-     * @return mixed
+     * @param  array<string, mixed>  $properties
      */
-    public function delete($id)
+    public function update(int|string $id, array $properties): bool
     {
-        return $this->find($id)->delete();
+        return (bool) $this->find($id)->update($properties);
+    }
+
+    public function delete(int|string $id): bool
+    {
+        return (bool) $this->find($id)->delete();
+    }
+
+    public function count(): int
+    {
+        return $this->newQuery()->count();
+    }
+
+    public function exists(): bool
+    {
+        return $this->newQuery()->exists();
     }
 
     /**
-     * @param $criteria
-     * @return mixed
+     * @return BaseCollection<array-key, mixed>
      */
-    public function withCriteria(...$criteria)
+    public function pluck(string $column, ?string $key = null): BaseCollection
     {
-        $criteria = Arr::flatten($criteria);
+        return $this->newQuery()->pluck($column, $key);
+    }
 
-        foreach ($criteria as $criterion) {
-            $this->entity = $criterion->apply($this->entity);
+    /**
+     * @param  callable(Collection<int, Model>, int): mixed  $callback
+     */
+    public function chunk(int $count, callable $callback): bool
+    {
+        return $this->newQuery()->chunk($count, $callback);
+    }
+
+    /**
+     * Queue one or more criteria for the next terminal operation.
+     *
+     * @param  CriterionInterface|array<int, CriterionInterface>  ...$criteria
+     */
+    public function withCriteria(...$criteria): static
+    {
+        foreach (Arr::flatten($criteria) as $criterion) {
+            if ($criterion instanceof CriterionInterface) {
+                $this->criteria[] = $criterion;
+            }
         }
 
         return $this;
     }
 
-    protected function resolveEntity()
+    /**
+     * Resolve the model instance from the container.
+     */
+    protected function resolveModel(): Model
     {
-        if (!method_exists($this, 'entity')) {
-            throw new NoEntityDefined();
-        }
+        /** @var Model $model */
+        $model = app($this->entity());
 
-        return app($this->entity());
+        return $model;
     }
 
-    private function processPagination($query, $paginate)
+    /**
+     * Build a fresh query, applying (and then clearing) any queued criteria.
+     *
+     * @return Builder<Model>
+     */
+    protected function newQuery(): Builder
     {
-    	return $paginate ? $query->paginate($paginate) : $query->get();
+        $query = $this->model->newQuery();
+
+        foreach ($this->criteria as $criterion) {
+            $query = $criterion->apply($query);
+        }
+
+        $this->criteria = [];
+
+        return $query;
+    }
+
+    /**
+     * @param  Builder<Model>  $query
+     * @return Collection<int, Model>|LengthAwarePaginator<int, Model>
+     */
+    protected function paginateOrGet(Builder $query, ?int $paginate): Collection|LengthAwarePaginator
+    {
+        return $paginate ? $query->paginate($paginate) : $query->get();
     }
 }

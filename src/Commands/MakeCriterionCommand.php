@@ -1,82 +1,44 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Kurt\Repoist\Commands;
 
-class MakeCriterionCommand extends RepoistCommand
+final class MakeCriterionCommand extends RepoistCommand
 {
     /**
-     * The name and signature of the console command.
-     *
      * @var string
      */
-    protected $signature = 'make:criterion {criterion}';
+    protected $signature = 'make:criterion {criterion : The criterion name (e.g. Completed or Blog/Published)}
+                            {--force : Overwrite existing files without asking}';
 
     /**
-     * The console command description.
-     *
      * @var string
      */
-    protected $description = 'Create a new criterion';
+    protected $description = 'Create a new query criterion';
 
-    /**
-     * Create a new command instance.
-     *
-     * @return void
-     */
-    public function __construct()
+    public function handle(): int
     {
-        parent::__construct();
-    }
+        $input = trim(str_replace('/', '\\', $this->stringArgument('criterion')), '\\');
 
-    /**
-     * Execute the console command.
-     *
-     * @return mixed
-     */
-    public function handle()
-    {
-        $this->createCriterion();
-    }
+        $parts = explode('\\', $input);
+        $name = array_pop($parts);
+        $subNamespace = implode('\\', $parts);
 
-    /**
-     * Create a new criterion
-     */
-    protected function createCriterion()
-    {
-        $content = $this->fileManager->get(
-            __DIR__.'/../stubs/Eloquent/Criteria/Example.php'
+        $namespace = $this->appNamespace().$this->config('namespaces.repositories').'\\Criteria'
+            .($subNamespace !== '' ? '\\'.$subNamespace : '');
+
+        $content = $this->fill($this->getStub('Eloquent/Criteria/Example.stub'), [
+            '{{ namespace }}' => $namespace,
+            '{{ criterion }}' => $name,
+        ]);
+
+        $path = $this->appPath(
+            $this->config('paths.repositories').'/Criteria/'.str_replace('\\', '/', $input).'.php'
         );
 
-        $criterion = $this->argument('criterion');
+        $this->writeFile($path, $content, 'criterion');
 
-        $replacements = [
-            '%namespaces.repositories%' => $this->config('namespaces.repositories'),
-            '%criterion%'               => $criterion,
-        ];
-
-        $content = str_replace(array_keys($replacements), array_values($replacements), $content);
-
-        $fileName      = $criterion;
-        $fileDirectory = app()->basePath().'/app/'.$this->config('paths.repositories').'Criteria';
-        $filePath      = $fileDirectory.'/'.$fileName.'.php';
-
-        if (!$this->fileManager->exists($fileDirectory)) {
-            $this->fileManager->makeDirectory($fileDirectory, 0755, true);
-        }
-
-        if ($this->laravel->runningInConsole() && $this->fileManager->exists($filePath)) {
-            $response = $this->ask("The criterion [{$fileName}] already exists. Do you want to overwrite it?", 'Yes');
-
-            if (!$this->isResponsePositive($response)) {
-                $this->line("The criterion [{$fileName}] will not be overwritten.");
-                return;
-            }
-
-            $this->fileManager->put($filePath, $content);
-        } else {
-            $this->fileManager->put($filePath, $content);
-        }
-
-        $this->line("The criterion [{$fileName}] has been created.");
+        return self::SUCCESS;
     }
 }

@@ -1,0 +1,10 @@
+<?php
+
+namespace {{ namespace }};
+
+use Kurt\Repoist\Repositories\Contracts\RepositoryInterface;
+
+interface {{ modelName }}Repository extends RepositoryInterface
+{
+    //
+}
